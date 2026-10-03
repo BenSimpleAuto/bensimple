@@ -96,7 +96,7 @@ export default function Home() {
       <div className="grain" />
 
       <header className="nav shell">
-        <a className="brand" href="#top" aria-label="BenSimple home">BenSimple<span>.</span></a>
+        <a className="brandLockup" href="#top" aria-label="BenSimple home"><span className="brandBen">Ben</span><span className="brandSimple">Simple.</span><small>IT'S BENSIMPLE ALL ALONG.</small></a>
         <div className="navRight">
           <a className="navLink" href="/specials" onClick={() => track("specials_nav_clicked")}>Specials</a>
           <a className="navLink" href={INVENTORY} target="_blank" rel="noreferrer" onClick={() => track("inventory_clicked", { placement: "nav" })}>Inventory</a>
@@ -106,22 +106,22 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="heroCopy">
-          <div className="eyebrow"><i /> Butte, Montana · New + Used</div>
-          <h1>Cars don't have to be <span>complicated.</span></h1>
+          <div className="eyebrow"><i /> BEN LAVELLE · BUTTE AUTO · BUTTE, MT</div>
+          <h1>Need a vehicle?<br/><span>Start with Ben.</span></h1>
           <p className="lede">
-            Buying, trading, finding, comparing, or just trying to figure out what a button does?
-            Tell me what you need. I'll help you make it simple.
+            New, used, trade-in help, vehicle questions, or a hard-to-find car. Tell me what you are trying to do and I will help you sort it out.
           </p>
+          <div className="heroPromise">Cars don't have to be complicated.</div>
 
           <div className="heroActions">
-            <button className="pill primary" onClick={() => openDrawer("hero")}>Tell Ben what you need</button>
-            <a className="pill secondary" href={INVENTORY} target="_blank" rel="noreferrer" onClick={() => track("inventory_clicked", { placement: "hero" })}>Browse inventory</a>
+            <button className="pill primary" onClick={() => openDrawer("hero")}>Help me find a vehicle</button>
+            <a className="pill secondary" href={`sms:${PHONE}`} onClick={() => track("text_clicked", { placement: "hero" })}>Text Ben</a>
           </div>
 
           <div className="trustRow">
-            <div><b>No pressure</b><span>Start with a question</span></div>
-            <div><b>8 brands + used</b><span>More choices, less tunnel vision</span></div>
-            <div><b>Local help</b><span>Butte Auto · Butte, MT</span></div>
+            <div><b>New + used</b><span>Across the Butte Auto group</span></div>
+            <div><b>Trades welcome</b><span>Bring me what you have</span></div>
+            <div><b>Real local help</b><span>Before and after the sale</span></div>
           </div>
         </div>
 
@@ -132,9 +132,9 @@ export default function Home() {
             <img src="/ben-profile.webp" alt="BenSimple cartoon portrait of Ben LaVelle" />
           </div>
           <div className="floatCard floatTop">
-            <span className="miniLabel">BEN HELPS</span>
-            <strong>Find the right fit</strong>
-            <small>Not just the next car on the lot.</small>
+            <span className="miniLabel">BENSIMPLE</span>
+            <strong>Buy · Trade · Find · Learn</strong>
+            <small>One place to start with any vehicle question.</small>
           </div>
           <div className="floatCard floatBottom">
             <span className="pulse" />
@@ -153,9 +153,9 @@ export default function Home() {
       <section className="specialTeaser shell">
         <div>
           <span className="eyebrow"><i /> CURRENT OFFERS</span>
-          <h2>Monthly specials without hijacking the homepage.</h2>
+          <h2>The good stuff this month.</h2>
           <p>
-            The main message stays simple. Featured rebates, price moves, and manager-approved vehicles live on their own page and can change month to month.
+            Real price moves, rebates worth knowing about, aged inventory, and vehicles I think deserve attention. I verify the details before they go live.
           </p>
         </div>
         <a className="pill secondary" href="/specials" onClick={() => track("specials_clicked", { placement: "teaser" })}>See current specials</a>
@@ -164,8 +164,8 @@ export default function Home() {
       <section className="help shell" id="help">
         <div className="sectionHead">
           <span className="eyebrow"><i /> START HERE</span>
-          <h2>What are you trying to figure out?</h2>
-          <p>You do not need to know the exact make, model, trim, payment, or answer before you contact me.</p>
+          <h2>You do not need to have it all figured out.</h2>
+          <p>Tell me what you need the vehicle to do, what you want to spend, or what is confusing you. We can start there.</p>
         </div>
 
         <div className="needGrid">
@@ -183,10 +183,9 @@ export default function Home() {
         <div className="localCard">
           <div>
             <span className="eyebrow"><i /> BUTTE AUTO</span>
-            <h2>One person. A lot more inventory.</h2>
+            <h2>I am not here to force one badge.</h2>
             <p>
-              I can help with RAM, Dodge, Chrysler, Jeep, Chevrolet, GMC, Toyota, Subaru, and used vehicles.
-              The point is not to force one badge. The point is to find what actually works for you.
+              I can work with RAM, Dodge, Chrysler, Jeep, Chevrolet, GMC, Toyota, Subaru, plus used vehicles. If the right answer is across the group instead of directly in front of me, I will go look for it.
             </p>
           </div>
           <div className="brandRail" aria-label="Vehicle brands">
@@ -198,8 +197,8 @@ export default function Home() {
       <section className="social shell">
         <div>
           <span className="eyebrow"><i /> FOLLOW BENSIMPLE</span>
-          <h2>See what I'm working on at the dealership.</h2>
-          <p>Fresh trades, useful car tips, deliveries, local stuff, and the occasional thing that probably should have stayed in the group chat.</p>
+          <h2>Follow the cars, the deals, and the useful stuff.</h2>
+          <p>Fresh trades, used-car finds, feature help, deliveries, Butte life, and whatever automotive problem I am solving that day.</p>
         </div>
         <div className="socialButtons">
           <a className="socialBtn" href={FACEBOOK} target="_blank" rel="noreferrer" onClick={() => track("social_clicked", { platform: "facebook" })}>Facebook <span>Follow BenSimple</span></a>
@@ -212,7 +211,7 @@ export default function Home() {
         <div>
           <span className="eyebrow"><i /> BEN LAVELLE</span>
           <h2>It's BenSimple all along.</h2>
-          <p>If you have a vehicle question, you have a place to start.</p>
+          <p>Buying, trading, finding, or figuring one out. Start here.</p>
         </div>
         <div className="contactButtons">
           <a className="pill primary" href={`sms:${PHONE}`} onClick={() => track("text_clicked", { placement: "contact" })}>Text {DISPLAY_PHONE}</a>
@@ -221,7 +220,7 @@ export default function Home() {
       </section>
 
       <footer className="shell footer">
-        <a className="brand" href="#top">BenSimple<span>.</span></a>
+        <a className="brandLockup footerBrand" href="#top"><span className="brandBen">Ben</span><span className="brandSimple">Simple.</span></a>
         <p>Cars don't have to be complicated.</p>
         <div className="footerLinks">
           <a href="/specials">Specials</a>
@@ -244,8 +243,8 @@ export default function Home() {
 
             {step === 0 && (
               <>
-                <span className="eyebrow"><i /> QUICK START</span>
-                <h3>What can I help with?</h3>
+                <span className="eyebrow"><i /> START HERE</span>
+                <h3>What do you need from me?</h3>
                 <div className="drawerChoices">
                   {needs.map(([value, title]) => <button key={value} onClick={() => chooseNeed(title)}>{title}<span>→</span></button>)}
                 </div>
@@ -254,10 +253,10 @@ export default function Home() {
 
             {step === 1 && (
               <>
-                <span className="eyebrow"><i /> A LITTLE CONTEXT</span>
-                <h3>Give me enough to be useful.</h3>
-                <label>Vehicle or type you're considering
-                  <input value={form.vehicle} onChange={(e) => setForm({ ...form, vehicle: e.target.value })} placeholder="Example: AWD SUV under 30k" />
+                <span className="eyebrow"><i /> THE VEHICLE</span>
+                <h3>What are we looking for?</h3>
+                <label>Vehicle, body style, or idea
+                  <input value={form.vehicle} onChange={(e) => setForm({ ...form, vehicle: e.target.value })} placeholder="Example: white AWD SUV, truck for towing, cheap commuter..." />
                 </label>
                 <div className="split">
                   <label>Budget
@@ -276,8 +275,8 @@ export default function Home() {
 
             {step === 2 && (
               <>
-                <span className="eyebrow"><i /> CONTACT</span>
-                <h3>How should I get back to you?</h3>
+                <span className="eyebrow"><i /> YOUR INFO</span>
+                <h3>Where should I reach you?</h3>
                 <label>Your name
                   <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="First and last name" />
                 </label>
@@ -295,15 +294,15 @@ export default function Home() {
                 </label>
                 {error && <div className="formError">{error}</div>}
                 <button className="pill primary full" onClick={finishLead} disabled={submitting}>{submitting ? "Sending..." : "Send my request to Ben"}</button>
-                <p className="formFine">No automated marketing list. This sends your request to Ben so he can follow up.</p>
+                <p className="formFine">This goes directly into BenSimple so I can follow up on what you asked for.</p>
               </>
             )}
 
             {step === 3 && (
               <>
                 <span className="eyebrow"><i /> SENT</span>
-                <h3>Got it.</h3>
-                <p className="drawerCopy">Your request is saved. If you want the fastest response, you can also open a text to Ben right now.</p>
+                <h3>I have it.</h3>
+                <p className="drawerCopy">Your request is saved. If you want to jump the line, open a text to me right now.</p>
                 <a className="pill primary full center" href={sms} onClick={() => track("text_clicked_after_lead")}>Text Ben now</a>
                 <a className="pill secondary full center" href={INVENTORY} target="_blank" rel="noreferrer">Browse inventory</a>
                 <button className="plainLink buttonLink" onClick={reset}>Start another request</button>
