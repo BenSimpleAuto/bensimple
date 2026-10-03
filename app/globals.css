@@ -254,3 +254,39 @@ main{position:relative;min-height:100vh;isolation:isolate}
 .sourceList p{color:#778279}
 @media(max-width:850px){.adminMetrics{grid-template-columns:1fr 1fr}.adminGrid{grid-template-columns:1fr}.adminTop{align-items:flex-start;flex-direction:column}.adminPage{padding:18px}}
 @media(max-width:520px){.adminMetrics{grid-template-columns:1fr}.adminAuth{padding:24px;margin-top:5vh}}
+
+/* BenSimple brand pass */
+.brandLockup{display:inline-flex;align-items:baseline;gap:0;text-decoration:none;position:relative;padding-bottom:10px;line-height:.9}
+.brandBen{font-size:30px;font-weight:1000;letter-spacing:-2px;background:linear-gradient(180deg,#fff 0%,#c8c8c8 35%,#696969 55%,#f2f2f2 78%,#858585 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 18px rgba(255,255,255,.08)}
+.brandSimple{font-size:31px;font-weight:1000;font-style:italic;letter-spacing:-2px;color:var(--lime);transform:skew(-8deg);text-shadow:0 0 16px rgba(184,255,52,.25)}
+.brandLockup small{position:absolute;left:2px;bottom:-1px;font-size:6.5px;letter-spacing:1.7px;color:#e6ece6;font-weight:900;white-space:nowrap}
+.footerBrand small{display:none}
+.hero{position:relative}
+.hero:before{content:"";position:absolute;inset:20px -24px 0;background:linear-gradient(115deg,rgba(184,255,52,.08),transparent 38%),repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 1px,transparent 1px 7px);border-top:1px solid rgba(184,255,52,.18);border-bottom:1px solid rgba(255,255,255,.05);pointer-events:none;z-index:-1}
+.heroCopy h1{font-weight:1000;line-height:.9;letter-spacing:-.065em;text-transform:uppercase}
+.heroCopy h1 span{color:var(--lime);text-shadow:0 0 22px rgba(184,255,52,.16)}
+.heroPromise{margin:6px 0 22px;font-size:15px;font-weight:900;font-style:italic;color:#dfe7df;letter-spacing:.02em}
+.portraitCard{border-radius:50% 50% 38% 38%;box-shadow:0 0 0 3px #111,0 0 0 5px var(--lime),0 18px 70px rgba(0,0,0,.55),0 0 60px rgba(184,255,52,.14)}
+.floatCard{border-radius:12px;border-left:3px solid var(--lime);box-shadow:0 14px 35px rgba(0,0,0,.3)}
+.quick{border-top:3px solid var(--lime);border-radius:4px}
+.needCard{border-radius:8px}
+.specialTeaser,.localCard{border-radius:10px}
+.socialBtn{border-radius:8px}
+.drawer{border-radius:10px 0 0 10px;border-left:3px solid var(--lime);background:linear-gradient(180deg,#0b110d,#090c0a 60%)}
+.drawer:before{content:"BENSIMPLE.";display:block;font-weight:1000;font-style:italic;letter-spacing:-2px;font-size:27px;color:var(--lime);margin-bottom:18px;text-shadow:0 0 18px rgba(184,255,52,.18)}
+.drawer h3{font-size:clamp(30px,6vw,46px);text-transform:none;letter-spacing:-.045em;line-height:1}
+.drawer label{font-weight:800;color:#c8d0c9}
+.drawer input,.drawer textarea{border-radius:7px;border-color:rgba(255,255,255,.12);background:#111813}
+.drawerChoices button{border-radius:7px}
+.progress{height:3px}
+.progress span{box-shadow:0 0 14px rgba(184,255,52,.55)}
+.formFine{color:#8c978e}
+@media(max-width:720px){
+  .nav{padding-top:20px}
+  .brandBen,.brandSimple{font-size:26px}
+  .hero{padding-top:30px}
+  .hero:before{inset:10px -16px 0}
+  .heroCopy h1{font-size:clamp(48px,15vw,74px)}
+  .heroVisual{margin-top:30px}
+  .drawer{border-radius:0;border-left:0;border-top:3px solid var(--lime);padding-top:24px}
+}
