@@ -1,3 +1,5 @@
+import { specials } from "../../data/specials";
+
 export const metadata = {
   title: "Monthly Specials | BenSimple.",
   description: "Current manager-approved vehicle specials, rebates, and featured opportunities from Ben LaVelle at Butte Auto."
@@ -21,26 +23,50 @@ export default function SpecialsPage() {
         <span className="eyebrow"><i /> MONTHLY SPECIALS</span>
         <h1>The deals worth knowing about.</h1>
         <p className="specialsIntro">
-          This page is reserved for current, manager-approved rebates, featured new vehicles, meaningful price moves, and limited offers. If an offer is conditional, the condition will be stated with it.
+          Current, manager-approved rebates, featured new vehicles, meaningful price moves, and limited offers. Conditional incentives are shown separately instead of being blended into a price everyone may not qualify for.
         </p>
 
         <div className="specialsRail">
-          <article className="specialCard specialEmpty">
-            <div>
-              <span className="tag">OCTOBER 2026</span>
-              <h3>New specials are being loaded.</h3>
-              <p>Ben is confirming this month's offers with management before publishing anything here.</p>
-            </div>
-            <a className="pill primary" href={`sms:${PHONE}?&body=${encodeURIComponent("Hi Ben, I saw the specials page on BenSimple.co. What current offers should I know about?")}`}>Ask Ben what's current</a>
-          </article>
+          {specials.length > 0 ? specials.map((offer) => (
+            <article className="specialCard" key={offer.id}>
+              <div>
+                <span className="tag">{offer.eyebrow}</span>
+                <h3>{offer.title}</h3>
+                {offer.price && <div className="specialPrice">{offer.price}</div>}
+                {offer.msrp && <div className="specialMsrp">MSRP {offer.msrp}</div>}
+                <p>{offer.summary}</p>
+                {offer.stock && <p className="smallPrint">Stock #{offer.stock}</p>}
+                {offer.conditions?.map((condition) => <p className="smallPrint" key={condition}>{condition}</p>)}
+              </div>
+              <div>
+                <a className="pill primary" href={`sms:${PHONE}?&body=${encodeURIComponent(`Hi Ben, I saw ${offer.title} on BenSimple.co. Is it still available?`)}`}>
+                  {offer.cta || "Ask Ben about this offer"}
+                </a>
+                <div className="smallPrint offerMeta">
+                  Verified {offer.verifiedAt || "recently"}{offer.expires ? ` · Offer ends ${offer.expires}` : ""}
+                </div>
+              </div>
+            </article>
+          )) : (
+            <article className="specialCard specialEmpty">
+              <div>
+                <span className="tag">CURRENT MONTH</span>
+                <h3>New specials are being confirmed.</h3>
+                <p>Ben is checking this month's offers with management before publishing any price or rebate here.</p>
+              </div>
+              <a className="pill primary" href={`sms:${PHONE}?&body=${encodeURIComponent("Hi Ben, I saw the specials page on BenSimple.co. What current offers should I know about?")}`}>
+                Ask Ben what's current
+              </a>
+            </article>
+          )}
 
           <article className="specialCard">
             <div>
               <span className="tag">HOW THIS PAGE WORKS</span>
               <h3>No mystery rebates.</h3>
-              <p>Conditional incentives, eligibility rules, expiration dates, stock limitations, and location details will be shown with the offer instead of buried somewhere else.</p>
+              <p>Conditional incentives, eligibility rules, expiration dates, stock limitations, and location details are shown with the offer instead of buried somewhere else.</p>
             </div>
-            <span className="smallPrint">Offers are subject to vehicle availability and official program terms.</span>
+            <span className="smallPrint">Offers remain subject to vehicle availability and official program terms.</span>
           </article>
 
           <article className="specialCard">
@@ -54,7 +80,7 @@ export default function SpecialsPage() {
         </div>
 
         <div className="specialsFooter">
-          Vehicle pricing, rebates, incentives, financing, and availability can change. Any advertised vehicle price on BenSimple.co is intended to reflect the actual price available to all consumers before government-required taxes and fees, unless a clearly identified eligibility condition applies. Conditional incentives are not included in an all-consumer price unless expressly stated. Confirm current availability and program terms before traveling.
+          Vehicle pricing, rebates, incentives, financing, and availability can change. Any advertised vehicle price on BenSimple.co is intended to reflect the actual price available to all consumers before government-required taxes and fees, unless a clearly identified eligibility condition applies. Dealer-required charges should be included in the advertised price. Conditional incentives are shown separately unless expressly stated otherwise. Confirm current availability and program terms before traveling.
         </div>
       </section>
     </main>
