@@ -194,3 +194,24 @@ main{position:relative;min-height:100vh;isolation:isolate}
 .specialPrice{font-size:34px;font-weight:950;letter-spacing:-.045em;color:var(--lime);margin-top:14px}
 .specialMsrp{font-size:12px;color:#7f8a81;margin-top:4px}
 .offerMeta{margin-top:12px}
+
+.quick button{appearance:none;border:0;border-right:1px solid var(--line);background:transparent;color:inherit;text-align:left;padding:26px 24px;cursor:pointer;transition:.2s ease}
+.quick button:hover{background:#111612}
+.quick button span,.quick button strong,.quick button small{display:block}
+.quick button span{font-size:11px;color:var(--lime);font-weight:900}
+.quick button strong{font-size:15px;margin:13px 0 6px}
+.quick button small{color:#778179;font-size:12px}
+.consentRow{display:grid!important;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.consentRow input{width:18px!important;height:18px!important;margin:2px 0 0!important}
+.consentRow span{font-size:12px;line-height:1.5;color:#96a097}
+.consentRow a{text-decoration:underline;text-underline-offset:3px}
+.formError{border:1px solid rgba(255,120,120,.35);background:rgba(255,80,80,.08);color:#ffb3b3;border-radius:12px;padding:11px 13px;font-size:12px;margin-top:12px}
+.formFine{font-size:11px;color:#6f7971;line-height:1.5;text-align:center}
+.pill:disabled{opacity:.55;cursor:not-allowed;transform:none}
+@media(max-width:900px){
+  .quick button:nth-child(2){border-right:0}
+  .quick button:nth-child(-n+2){border-bottom:1px solid var(--line)}
+}
+@media(max-width:620px){
+  .quick button{border-right:0;border-bottom:1px solid var(--line)!important}
+}
