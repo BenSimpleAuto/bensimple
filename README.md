@@ -23,3 +23,28 @@ Automotive development lives on:
 `automotive-2026`
 
 Backend lead storage and attribution will be connected to a clean Supabase project before production cutover.
+
+
+## Social rollout
+Live:
+- Facebook: https://www.facebook.com/benlavelle26
+- Instagram: https://www.instagram.com/benlavelle26/
+
+Planned fresh BenSimple accounts:
+- YouTube
+- TikTok
+- Snapchat
+
+Do not show dead social buttons on the production site. Add each platform only after the account exists.
+
+## Monthly specials publishing gate
+A special does not go live until the following are confirmed:
+- exact vehicle/model or stock number
+- actual all-consumer advertised price
+- dealer-required fees included in advertised price
+- conditional incentive separated and eligibility stated
+- expiration date or program window
+- manager verification date
+- current availability
+
+The public page reads from `data/specials.js`.
