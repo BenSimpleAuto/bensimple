@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { submitLead, track } from "../lib/track";
 
 const PHONE = "4063995959";
 const DISPLAY_PHONE = "406-399-5959";
@@ -33,18 +34,59 @@ function buildMessage(form) {
 export default function Home() {
   const [drawer, setDrawer] = useState(false);
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ need: "", vehicle: "", budget: "", trade: "", name: "", note: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    need: "", vehicle: "", budget: "", trade: "", name: "", phone: "", email: "", note: "", consent: false
+  });
+
+  useEffect(() => {
+    track("page_view");
+  }, []);
 
   const sms = useMemo(() => `sms:${PHONE}?&body=${encodeURIComponent(buildMessage(form))}`, [form]);
 
+  function openDrawer(source = "unknown") {
+    track("tell_ben_opened", { source });
+    setDrawer(true);
+  }
+
   function chooseNeed(value) {
     setForm((f) => ({ ...f, need: value }));
+    track("need_selected", { need: value });
     setStep(1);
   }
 
   function reset() {
     setStep(0);
-    setForm({ need: "", vehicle: "", budget: "", trade: "", name: "", note: "" });
+    setError("");
+    setForm({ need: "", vehicle: "", budget: "", trade: "", name: "", phone: "", email: "", note: "", consent: false });
+  }
+
+  async function finishLead() {
+    setError("");
+    if (!form.name.trim()) {
+      setError("Add your name so I know who I am helping.");
+      return;
+    }
+    if (!form.phone.trim() && !form.email.trim()) {
+      setError("Add a phone number or email so I can get back to you.");
+      return;
+    }
+    if (!form.consent) {
+      setError("Please confirm I can contact you about this request.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await submitLead(form);
+      setStep(3);
+    } catch {
+      setError("I couldn't save that request yet. You can still text or email Ben directly.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -56,9 +98,9 @@ export default function Home() {
       <header className="nav shell">
         <a className="brand" href="#top" aria-label="BenSimple home">BenSimple<span>.</span></a>
         <div className="navRight">
-          <a className="navLink" href="/specials">Specials</a>
-          <a className="navLink" href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a>
-          <a className="pill ghost" href={`tel:${PHONE}`}>Call Ben</a>
+          <a className="navLink" href="/specials" onClick={() => track("specials_nav_clicked")}>Specials</a>
+          <a className="navLink" href={INVENTORY} target="_blank" rel="noreferrer" onClick={() => track("inventory_clicked", { placement: "nav" })}>Inventory</a>
+          <a className="pill ghost" href={`tel:${PHONE}`} onClick={() => track("call_clicked", { placement: "nav" })}>Call Ben</a>
         </div>
       </header>
 
@@ -72,8 +114,8 @@ export default function Home() {
           </p>
 
           <div className="heroActions">
-            <button className="pill primary" onClick={() => setDrawer(true)}>Tell Ben what you need</button>
-            <a className="pill secondary" href={INVENTORY} target="_blank" rel="noreferrer">Browse inventory</a>
+            <button className="pill primary" onClick={() => openDrawer("hero")}>Tell Ben what you need</button>
+            <a className="pill secondary" href={INVENTORY} target="_blank" rel="noreferrer" onClick={() => track("inventory_clicked", { placement: "hero" })}>Browse inventory</a>
           </div>
 
           <div className="trustRow">
@@ -102,10 +144,10 @@ export default function Home() {
       </section>
 
       <section className="quick shell">
-        <a href="#help"><span>01</span><strong>Find me a vehicle</strong><small>Tell me what matters</small></a>
-        <a href="#help"><span>02</span><strong>Value my trade</strong><small>Start the conversation</small></a>
-        <a href={INVENTORY} target="_blank" rel="noreferrer"><span>03</span><strong>Browse inventory</strong><small>New + used at Butte Auto</small></a>
-        <a href="/specials"><span>04</span><strong>Monthly specials</strong><small>Manager-approved offers</small></a>
+        <button onClick={() => { chooseNeed("I need a vehicle"); setDrawer(true); }}><span>01</span><strong>Find me a vehicle</strong><small>Tell me what matters</small></button>
+        <button onClick={() => { chooseNeed("I have a trade"); setDrawer(true); }}><span>02</span><strong>Value my trade</strong><small>Start the conversation</small></button>
+        <a href={INVENTORY} target="_blank" rel="noreferrer" onClick={() => track("inventory_clicked", { placement: "quick" })}><span>03</span><strong>Browse inventory</strong><small>New + used at Butte Auto</small></a>
+        <a href="/specials" onClick={() => track("specials_clicked", { placement: "quick" })}><span>04</span><strong>Monthly specials</strong><small>Manager-approved offers</small></a>
       </section>
 
       <section className="specialTeaser shell">
@@ -116,7 +158,7 @@ export default function Home() {
             The main message stays simple. Featured rebates, price moves, and manager-approved vehicles live on their own page and can change month to month.
           </p>
         </div>
-        <a className="pill secondary" href="/specials">See current specials</a>
+        <a className="pill secondary" href="/specials" onClick={() => track("specials_clicked", { placement: "teaser" })}>See current specials</a>
       </section>
 
       <section className="help shell" id="help">
@@ -160,9 +202,9 @@ export default function Home() {
           <p>Fresh trades, useful car tips, deliveries, local stuff, and the occasional thing that probably should have stayed in the group chat.</p>
         </div>
         <div className="socialButtons">
-          <a className="socialBtn" href={FACEBOOK} target="_blank" rel="noreferrer">Facebook <span>Follow BenSimple</span></a>
-          <a className="socialBtn" href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <span>@benlavelle26</span></a>
-          <a className="socialBtn mutedSocial" href="mailto:ben@bensimple.co">Email <span>ben@bensimple.co</span></a>
+          <a className="socialBtn" href={FACEBOOK} target="_blank" rel="noreferrer" onClick={() => track("social_clicked", { platform: "facebook" })}>Facebook <span>Follow BenSimple</span></a>
+          <a className="socialBtn" href={INSTAGRAM} target="_blank" rel="noreferrer" onClick={() => track("social_clicked", { platform: "instagram" })}>Instagram <span>@benlavelle26</span></a>
+          <a className="socialBtn mutedSocial" href={`mailto:${EMAIL}`} onClick={() => track("email_clicked", { placement: "social" })}>Email <span>{EMAIL}</span></a>
         </div>
       </section>
 
@@ -173,8 +215,8 @@ export default function Home() {
           <p>If you have a vehicle question, you have a place to start.</p>
         </div>
         <div className="contactButtons">
-          <a className="pill primary" href={`sms:${PHONE}`}>Text {DISPLAY_PHONE}</a>
-          <a className="pill secondary" href={`mailto:${EMAIL}`}>{EMAIL}</a>
+          <a className="pill primary" href={`sms:${PHONE}`} onClick={() => track("text_clicked", { placement: "contact" })}>Text {DISPLAY_PHONE}</a>
+          <a className="pill secondary" href={`mailto:${EMAIL}`} onClick={() => track("email_clicked", { placement: "contact" })}>{EMAIL}</a>
         </div>
       </section>
 
@@ -189,16 +231,16 @@ export default function Home() {
       </footer>
 
       <div className="mobileBar">
-        <a href={`tel:${PHONE}`}>Call</a>
-        <a href={`sms:${PHONE}`}>Text</a>
-        <button onClick={() => setDrawer(true)}>Tell Ben</button>
+        <a href={`tel:${PHONE}`} onClick={() => track("call_clicked", { placement: "mobile_bar" })}>Call</a>
+        <a href={`sms:${PHONE}`} onClick={() => track("text_clicked", { placement: "mobile_bar" })}>Text</a>
+        <button onClick={() => openDrawer("mobile_bar")}>Tell Ben</button>
       </div>
 
       {drawer && (
         <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setDrawer(false); }}>
           <div className="drawer">
             <button className="close" onClick={() => setDrawer(false)} aria-label="Close">×</button>
-            <div className="progress"><span style={{ width: step === 0 ? "30%" : step === 1 ? "62%" : "100%" }} /></div>
+            <div className="progress"><span style={{ width: step === 0 ? "20%" : step === 1 ? "45%" : step === 2 ? "75%" : "100%" }} /></div>
 
             {step === 0 && (
               <>
@@ -234,15 +276,37 @@ export default function Home() {
 
             {step === 2 && (
               <>
-                <span className="eyebrow"><i /> READY</span>
-                <h3>Send it straight to Ben.</h3>
-                <p className="drawerCopy">Your phone will open a text with the details already filled in. Edit anything you want before sending.</p>
+                <span className="eyebrow"><i /> CONTACT</span>
+                <h3>How should I get back to you?</h3>
                 <label>Your name
-                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="First name is fine" />
+                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="First and last name" />
                 </label>
-                <a className="pill primary full center" href={sms}>Open text to Ben</a>
-                <a className="plainLink" href={`mailto:${EMAIL}?subject=BenSimple%20vehicle%20help&body=${encodeURIComponent(buildMessage(form))}`}>Prefer email?</a>
-                <button className="plainLink buttonLink" onClick={reset}>Start over</button>
+                <div className="split">
+                  <label>Phone
+                    <input inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="406-555-1234" />
+                  </label>
+                  <label>Email
+                    <input inputMode="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+                  </label>
+                </div>
+                <label className="consentRow">
+                  <input type="checkbox" checked={form.consent} onChange={(e) => setForm({ ...form, consent: e.target.checked })} />
+                  <span>I agree Ben may contact me about this request. Message and data rates may apply. <a href="/legal" target="_blank">Privacy & disclosures</a>.</span>
+                </label>
+                {error && <div className="formError">{error}</div>}
+                <button className="pill primary full" onClick={finishLead} disabled={submitting}>{submitting ? "Sending..." : "Send my request to Ben"}</button>
+                <p className="formFine">No automated marketing list. This sends your request to Ben so he can follow up.</p>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <span className="eyebrow"><i /> SENT</span>
+                <h3>Got it.</h3>
+                <p className="drawerCopy">Your request is saved. If you want the fastest response, you can also open a text to Ben right now.</p>
+                <a className="pill primary full center" href={sms} onClick={() => track("text_clicked_after_lead")}>Text Ben now</a>
+                <a className="pill secondary full center" href={INVENTORY} target="_blank" rel="noreferrer">Browse inventory</a>
+                <button className="plainLink buttonLink" onClick={reset}>Start another request</button>
               </>
             )}
           </div>
