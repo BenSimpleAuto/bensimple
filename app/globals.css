@@ -190,3 +190,7 @@ main{position:relative;min-height:100vh;isolation:isolate}
   .footerLinks{flex-wrap:wrap}
   .specialsRail{grid-auto-columns:88%}
 }
+
+.specialPrice{font-size:34px;font-weight:950;letter-spacing:-.045em;color:var(--lime);margin-top:14px}
+.specialMsrp{font-size:12px;color:#7f8a81;margin-top:4px}
+.offerMeta{margin-top:12px}
