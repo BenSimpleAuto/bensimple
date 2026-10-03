@@ -7,7 +7,7 @@ const DISPLAY_PHONE = "406-399-5959";
 const EMAIL = "ben@bensimple.co";
 const INVENTORY = "https://www.butteauto.com/";
 const INSTAGRAM = "https://www.instagram.com/benlavelle26/";
-const FACEBOOK = "https://www.facebook.com/share/1G2DhPPrVo/";
+const FACEBOOK = "https://www.facebook.com/benlavelle26";
 
 const needs = [
   ["vehicle", "I need a vehicle", "Tell me what fits your life and budget."],
