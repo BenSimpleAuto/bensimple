@@ -7,6 +7,7 @@ const DISPLAY_PHONE = "406-399-5959";
 const EMAIL = "ben@bensimple.co";
 const INVENTORY = "https://www.butteauto.com/";
 const INSTAGRAM = "https://www.instagram.com/benlavelle26/";
+const FACEBOOK = "https://www.facebook.com/share/1G2DhPPrVo/";
 
 const needs = [
   ["vehicle", "I need a vehicle", "Tell me what fits your life and budget."],
@@ -159,6 +160,7 @@ export default function Home() {
           <p>Fresh trades, useful car tips, deliveries, local stuff, and the occasional thing that probably should have stayed in the group chat.</p>
         </div>
         <div className="socialButtons">
+          <a className="socialBtn" href={FACEBOOK} target="_blank" rel="noreferrer">Facebook <span>Follow BenSimple</span></a>
           <a className="socialBtn" href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <span>@benlavelle26</span></a>
           <a className="socialBtn mutedSocial" href="mailto:ben@bensimple.co">Email <span>ben@bensimple.co</span></a>
         </div>
