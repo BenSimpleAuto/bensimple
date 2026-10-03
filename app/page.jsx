@@ -6,6 +6,7 @@ const PHONE = "4063995959";
 const DISPLAY_PHONE = "406-399-5959";
 const EMAIL = "ben@bensimple.co";
 const INVENTORY = "https://www.butteauto.com/";
+const INSTAGRAM = "https://www.instagram.com/benlavelle26/";
 
 const needs = [
   ["vehicle", "I need a vehicle", "Tell me what fits your life and budget."],
@@ -52,10 +53,9 @@ export default function Home() {
       <div className="grain" />
 
       <header className="nav shell">
-        <a className="brand" href="#top" aria-label="BenSimple home">
-          BenSimple<span>.</span>
-        </a>
+        <a className="brand" href="#top" aria-label="BenSimple home">BenSimple<span>.</span></a>
         <div className="navRight">
+          <a className="navLink" href="/specials">Specials</a>
           <a className="navLink" href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a>
           <a className="pill ghost" href={`tel:${PHONE}`}>Call Ben</a>
         </div>
@@ -104,7 +104,18 @@ export default function Home() {
         <a href="#help"><span>01</span><strong>Find me a vehicle</strong><small>Tell me what matters</small></a>
         <a href="#help"><span>02</span><strong>Value my trade</strong><small>Start the conversation</small></a>
         <a href={INVENTORY} target="_blank" rel="noreferrer"><span>03</span><strong>Browse inventory</strong><small>New + used at Butte Auto</small></a>
-        <a href="#help"><span>04</span><strong>Ask a car question</strong><small>No purchase required</small></a>
+        <a href="/specials"><span>04</span><strong>Monthly specials</strong><small>Manager-approved offers</small></a>
+      </section>
+
+      <section className="specialTeaser shell">
+        <div>
+          <span className="eyebrow"><i /> CURRENT OFFERS</span>
+          <h2>Monthly specials without hijacking the homepage.</h2>
+          <p>
+            The main message stays simple. Featured rebates, price moves, and manager-approved vehicles live on their own page and can change month to month.
+          </p>
+        </div>
+        <a className="pill secondary" href="/specials">See current specials</a>
       </section>
 
       <section className="help shell" id="help">
@@ -141,6 +152,18 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="social shell">
+        <div>
+          <span className="eyebrow"><i /> FOLLOW BENSIMPLE</span>
+          <h2>See what I'm working on at the dealership.</h2>
+          <p>Fresh trades, useful car tips, deliveries, local stuff, and the occasional thing that probably should have stayed in the group chat.</p>
+        </div>
+        <div className="socialButtons">
+          <a className="socialBtn" href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <span>@benlavelle26</span></a>
+          <a className="socialBtn mutedSocial" href="mailto:ben@bensimple.co">Email <span>ben@bensimple.co</span></a>
+        </div>
+      </section>
+
       <section className="contact shell">
         <div>
           <span className="eyebrow"><i /> BEN LAVELLE</span>
@@ -156,6 +179,10 @@ export default function Home() {
       <footer className="shell footer">
         <a className="brand" href="#top">BenSimple<span>.</span></a>
         <p>Cars don't have to be complicated.</p>
+        <div className="footerLinks">
+          <a href="/specials">Specials</a>
+          <a href="/legal">Disclosures & Privacy</a>
+        </div>
         <span>Butte Auto · Butte, Montana</span>
       </footer>
 
