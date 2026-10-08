@@ -1,208 +1,165 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import BrandWordmark from "./components/BrandWordmark";
 import { submitLead, track } from "../lib/track";
 
 const PHONE = "4063995959";
 const DISPLAY_PHONE = "406-399-5959";
 const EMAIL = "ben@bensimple.co";
-const INVENTORY = "https://www.butteauto.com/";
+const INVENTORY = "https://www.butteauto.com/all-inventory/index.htm";
+const NEW_INVENTORY = "https://www.butteauto.com/new-inventory/index.htm";
+const USED_INVENTORY = "https://www.butteauto.com/used-inventory/index.htm";
 const INSTAGRAM = "https://www.instagram.com/benlavelle26/";
 const FACEBOOK = "https://www.facebook.com/benlavelle26";
 
-const intents = ["Buy", "Sell", "Trade", "Locate", "Ask Question"];
-const vehicleTypes = ["Car", "Truck", "SUV", "Van", "Undecided"];
-const conditions = ["New", "Used", "Either"];
-const contactModes = ["Text", "Call", "Email"];
-const contactTimes = ["Morning", "Afternoon", "Evening", "Anytime"];
-const currentYear = 2027;
-const years = Array.from({ length: 31 }, (_, i) => currentYear - i);
+const emptyForm = {
+  processStage: "", vehicleYear: "", vehicleMake: "", vehicleModel: "", vehicleTrim: "", preferredColor: "", vehicleCondition: "Either",
+  modelsConsidered: "", liked: "", disliked: "", bodyStyle: "", drivetrain: "No preference", seating: "", thirdRow: "No preference",
+  groundClearance: "", safety: "", towing: "", cargo: "", fuelEconomy: "", drivingUse: "", winterNeeds: "", preferredBrands: "",
+  avoidedBrands: "", mustHaves: "", dealBreakers: "", budgetMode: "Total budget", budgetDetails: "", tradeIn: "Maybe",
+  purchaseTimeline: "Just researching", tradeAction: "Trade", tradeYear: "", tradeMake: "", tradeModel: "", tradeMileage: "",
+  tradeVin: "", tradeCondition: "", tradePayoff: "", replacementInterest: "", questionTopic: "General automotive help", question: "",
+  appointmentReason: "Vehicle shopping", appointmentDate: "", appointmentTime: "", firstName: "", lastName: "", phone: "", email: "",
+  preferredContact: "Text", notes: "", consent: false
+};
 
-const featuredAdvice = [
-  { tag: "RIGHT NOW", title: "Cold mornings are coming.", copy: "A quick tire-pressure, battery, coolant, wiper, and washer-fluid check now is easier than finding out what failed on the first ugly morning." },
-  { tag: "FREE TOOL", title: "Check your VIN for open recalls.", copy: "NHTSA has a free recall lookup. If you find something you do not understand, send it to me and I will help you sort out the next step.", href: "https://www.nhtsa.gov/recalls", cta: "Open recall lookup" },
-  { tag: "BENSIMPLE 101", title: "AWD and 4WD are not the same thing.", copy: "Both can help in Montana. Neither replaces good tires. I can help you figure out which setup actually fits how and where you drive." }
-];
+const labels = {
+  processStage: "Where they are in the process", vehicleYear: "Year", vehicleMake: "Make", vehicleModel: "Model", vehicleTrim: "Trim",
+  preferredColor: "Preferred color", vehicleCondition: "New or used", modelsConsidered: "Vehicles already considered", liked: "What they liked",
+  disliked: "What they did not like", bodyStyle: "Body style", drivetrain: "Drivetrain", seating: "Seating needs", thirdRow: "Third row",
+  groundClearance: "Ground clearance", safety: "Safety priorities", towing: "Towing needs", cargo: "Cargo needs", fuelEconomy: "Fuel economy",
+  drivingUse: "Commute and driving use", winterNeeds: "Montana and winter needs", preferredBrands: "Preferred brands", avoidedBrands: "Brands to avoid",
+  mustHaves: "Must-have features", dealBreakers: "Deal-breakers", budgetMode: "Budget type", budgetDetails: "Budget", tradeIn: "Trade-in",
+  purchaseTimeline: "Timeline", tradeAction: "Trade or sell", tradeYear: "Trade year", tradeMake: "Trade make", tradeModel: "Trade model",
+  tradeMileage: "Mileage", tradeVin: "VIN", tradeCondition: "Condition", tradePayoff: "Payoff", replacementInterest: "Considering next",
+  questionTopic: "Question topic", question: "Question", appointmentReason: "Appointment reason", appointmentDate: "Preferred date",
+  appointmentTime: "Preferred time", firstName: "First name", lastName: "Last name", phone: "Phone", email: "Email",
+  preferredContact: "Preferred contact", notes: "Notes"
+};
 
-function money(value) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+const reviewKeys = {
+  discovery: ["processStage", "vehicleYear", "vehicleMake", "vehicleModel", "vehicleTrim", "preferredColor", "vehicleCondition", "modelsConsidered", "liked", "disliked", "bodyStyle", "drivetrain", "seating", "thirdRow", "groundClearance", "safety", "towing", "cargo", "fuelEconomy", "drivingUse", "winterNeeds", "preferredBrands", "avoidedBrands", "mustHaves", "dealBreakers", "budgetMode", "budgetDetails", "tradeIn", "purchaseTimeline", "firstName", "lastName", "phone", "email", "preferredContact", "notes"],
+  trade: ["tradeAction", "tradeYear", "tradeMake", "tradeModel", "tradeMileage", "tradeVin", "tradeCondition", "tradePayoff", "replacementInterest", "notes", "firstName", "lastName", "phone", "email", "preferredContact"],
+  ask: ["questionTopic", "question", "firstName", "lastName", "phone", "email", "preferredContact"],
+  appointment: ["appointmentReason", "appointmentDate", "appointmentTime", "notes", "firstName", "lastName", "phone", "email", "preferredContact"]
+};
+
+function ChoiceRow({ options, value, onChange }) {
+  return <div className="choiceRow">{options.map((option) => <button type="button" key={option} className={value === option ? "choice active" : "choice"} onClick={() => onChange(option)}>{option}</button>)}</div>;
 }
 
-function buildMessage(form) {
-  const vehicle = [form.vehicleYear, form.vehicleMake, form.vehicleModel].filter(Boolean).join(" ");
-  const rows = [
-    "Hi Ben, I came from BenSimple.co.",
-    form.intent ? "I'd like help with: " + form.intent : "",
-    form.vehicleType ? "Type: " + form.vehicleType : "",
-    vehicle ? "Vehicle: " + vehicle : "",
-    form.budgetMode === "payment" && form.paymentMax ? "Budget: up to $" + form.paymentMax + "/mo" : "",
-    form.budgetMode === "price" && form.budgetMax ? "Budget: " + money(form.budgetMin) + " to " + money(form.budgetMax) : "",
-    form.tradeYear || form.tradeMake || form.tradeModel ? "Trade: " + [form.tradeYear, form.tradeMake, form.tradeModel].filter(Boolean).join(" ") : "",
-    form.tradeMileage ? "Trade miles: " + Number(form.tradeMileage).toLocaleString() : "",
-    form.note ? "Note: " + form.note : ""
-  ].filter(Boolean);
-  return rows.join("\n");
+function TextField({ label, value, onChange, placeholder = "", type = "text", required = false }) {
+  return <label className="fieldLabel"><span>{label}{required && <b>Required</b>}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>;
 }
 
-function ChoiceRow({ options, value, onChange, compact = false }) {
-  return <div className={compact ? "choiceRow compact" : "choiceRow"}>{options.map((option) => (
-    <button type="button" key={option} className={value === option ? "choice active" : "choice"} onClick={() => onChange(option)}>{option}</button>
-  ))}</div>;
+function TextArea({ label, value, onChange, placeholder = "" }) {
+  return <label className="fieldLabel"><span>{label}</span><textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>;
 }
 
-function MineFrame() {
-  return <svg className="headframe" viewBox="0 0 220 150" aria-hidden="true"><path d="M45 135 L75 24 L145 24 L176 135 M67 58 H154 M60 83 H162 M53 108 H169 M84 24 L65 135 M136 24 L156 135 M89 8 H132 M110 8 V24" /></svg>;
+function SelectField({ label, value, onChange, options }) {
+  return <label className="fieldLabel"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
 }
 
-export default function Home() {
-  const [drawer, setDrawer] = useState(false);
-  const [step, setStep] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [makes, setMakes] = useState([]);
-  const [models, setModels] = useState([]);
-  const [vehicleDataLoading, setVehicleDataLoading] = useState(false);
-  const [form, setForm] = useState({
-    intent: "", vehicleType: "", vehicleCondition: "Either", vehicleYear: "", vehicleMake: "", vehicleModel: "",
-    budgetMode: "price", budgetMin: 10000, budgetMax: 40000, paymentMax: 700,
-    tradeYear: "", tradeMake: "", tradeModel: "", tradeVin: "", tradeMileage: "", tradeHasLien: null, tradeStory: "",
-    firstName: "", lastName: "", phone: "", email: "", preferredContact: "", preferredTime: "Anytime", note: "", consent: false
-  });
+function ContactFields({ form, update }) {
+  return <><div className="fieldGrid two"><TextField label="First name" required value={form.firstName} onChange={(value) => update("firstName", value)} /><TextField label="Last name" required value={form.lastName} onChange={(value) => update("lastName", value)} /></div><div className="fieldGrid two"><TextField label="Phone" value={form.phone} onChange={(value) => update("phone", value)} placeholder="406-555-1234" type="tel" /><TextField label="Email" value={form.email} onChange={(value) => update("email", value)} placeholder="you@example.com" type="email" /></div><p className="fieldPrompt">How should Ben contact you?</p><ChoiceRow options={["Text", "Call", "Email"]} value={form.preferredContact} onChange={(value) => update("preferredContact", value)} /><label className="consentRow"><input type="checkbox" checked={form.consent} onChange={(event) => update("consent", event.target.checked)} /><span>I agree that Ben may contact me about this request. Message and data rates may apply.</span></label><p className="formHint">Your name and either a phone number or email are required.</p></>;
+}
 
-  useEffect(() => {
-    track("page_view");
-    fetch("https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json")
-      .then((r) => r.json())
-      .then((data) => setMakes([...new Set((data.Results || []).map((x) => x.Make_Name).filter(Boolean).sort((a,b)=>a.localeCompare(b)))]))
-      .catch(() => {});
-  }, []);
+function ReviewStep({ title, entries, error, submitting, onBack, onSubmit, sms }) {
+  return <div className="flowStep reviewStep"><span className="sectionLabel">Review</span><h2>{title}</h2><p>Ben will receive the structured details below. No automated vehicle recommendation is being made.</p><div className="reviewList">{entries.map(([key, value]) => <div key={key}><span>{labels[key] || key}</span><strong>{String(value)}</strong></div>)}</div>{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={onBack}>Make changes</button><button type="button" className="button primary" disabled={submitting} onClick={onSubmit}>{submitting ? "Sending..." : "Send to Ben"}</button></div>{error && <a className="fallbackLink" href={sms}>Text the prepared summary instead</a>}</div>;
+}
 
-  useEffect(() => {
-    if (!form.vehicleMake || !form.vehicleYear) { setModels([]); return; }
-    setVehicleDataLoading(true);
-    const url = "https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/" + encodeURIComponent(form.vehicleMake) + "/modelyear/" + encodeURIComponent(form.vehicleYear) + "?format=json";
-    fetch(url).then((r)=>r.json()).then((data)=>setModels([...new Set((data.Results || []).map((x)=>x.Model_Name).filter(Boolean).sort((a,b)=>a.localeCompare(b)))]))
-      .catch(()=>setModels([])).finally(()=>setVehicleDataLoading(false));
-  }, [form.vehicleMake, form.vehicleYear]);
-
-  const sms = useMemo(() => "sms:" + PHONE + "?&body=" + encodeURIComponent(buildMessage(form)), [form]);
-
-  function update(key, value) { setForm((f) => ({ ...f, [key]: value })); }
-  function startIntent(intent) { track("intent_selected", { intent }); setForm((f)=>({ ...f, intent })); setStep(1); setDrawer(true); }
-  function reset() {
-    setStep(0); setError("");
-    setForm({ intent:"", vehicleType:"", vehicleCondition:"Either", vehicleYear:"", vehicleMake:"", vehicleModel:"", budgetMode:"price", budgetMin:10000, budgetMax:40000, paymentMax:700, tradeYear:"", tradeMake:"", tradeModel:"", tradeVin:"", tradeMileage:"", tradeHasLien:null, tradeStory:"", firstName:"", lastName:"", phone:"", email:"", preferredContact:"", preferredTime:"Anytime", note:"", consent:false });
+function StandardFlow({ flow, step, form, update, error, next, back, reviewEntries, reviewStep, submit, submitting, sms }) {
+  if (step === reviewStep) return <ReviewStep title="Check your request." entries={reviewEntries} error={error} submitting={submitting} onBack={back} onSubmit={submit} sms={sms} />;
+  if (flow === "trade") {
+    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Vehicle</span><h2>Which vehicle are you considering trading or selling?</h2><div className="fieldGrid three"><TextField label="Year" required value={form.tradeYear} onChange={(value) => update("tradeYear", value)} /><TextField label="Make" required value={form.tradeMake} onChange={(value) => update("tradeMake", value)} /><TextField label="Model" required value={form.tradeModel} onChange={(value) => update("tradeModel", value)} /></div><div className="fieldGrid two"><TextField label="Mileage" value={form.tradeMileage} onChange={(value) => update("tradeMileage", value)} /><TextField label="VIN, optional" value={form.tradeVin} onChange={(value) => update("tradeVin", value.toUpperCase())} /></div><p className="fieldPrompt">What are you considering?</p><ChoiceRow options={["Trade", "Sell", "Not sure"]} value={form.tradeAction} onChange={(value) => update("tradeAction", value)} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
+    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Details</span><h2>What should Ben know about it?</h2><div className="fieldGrid two"><TextArea label="Condition" value={form.tradeCondition} onChange={(value) => update("tradeCondition", value)} placeholder="Good, bad, recent work, damage, tires" /><TextField label="Payoff, if applicable" value={form.tradePayoff} onChange={(value) => update("tradePayoff", value)} /></div><TextArea label="What are you considering next?" value={form.replacementInterest} onChange={(value) => update("replacementInterest", value)} /><TextArea label="Additional notes" value={form.notes} onChange={(value) => update("notes", value)} /><p className="formHint">Photos can follow by text after Ben reviews the request.</p><div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
+    if (step === 3) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Contact</span><h2>How may Ben reach you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review request</button></div></div>;
   }
-  async function finishLead() {
-    setError("");
-    if (!form.firstName.trim() || !form.lastName.trim()) { setError("Please add your first and last name."); return; }
-    if (!form.phone.trim() && !form.email.trim()) { setError("Please add either a phone number or email so I can reach you."); return; }
-    if (!form.consent) { setError("Please confirm that I may contact you about this request."); return; }
-    setSubmitting(true);
-    try { await submitLead(form); setStep(4); }
-    catch { setError("That did not save correctly. You can still text or call me below while I fix it."); }
+  if (flow === "ask") {
+    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Ask Ben · Question</span><h2>What can Ben help you figure out?</h2><SelectField label="Topic" value={form.questionTopic} onChange={(value) => update("questionTopic", value)} options={["Buying", "Trading", "Features", "Comparisons", "Ownership", "Troubleshooting", "Towing", "AWD / 4WD", "Trim levels", "Montana driving", "General automotive help"]} /><TextArea label="Your question" value={form.question} onChange={(value) => update("question", value)} placeholder="Ask the question in your own words" />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
+    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Ask Ben · Contact</span><h2>How may Ben answer you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review question</button></div></div>;
+  }
+  if (flow === "appointment") {
+    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Appointment · Details</span><h2>What would you like to schedule?</h2><SelectField label="Reason" value={form.appointmentReason} onChange={(value) => update("appointmentReason", value)} options={["Vehicle shopping", "Test drive", "Trade appraisal", "Vehicle question", "Other"]} /><div className="fieldGrid two"><TextField label="Preferred date" type="date" value={form.appointmentDate} onChange={(value) => update("appointmentDate", value)} /><TextField label="Preferred time" type="time" value={form.appointmentTime} onChange={(value) => update("appointmentTime", value)} /></div><TextArea label="Anything Ben should know?" value={form.notes} onChange={(value) => update("notes", value)} /><div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
+    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Appointment · Contact</span><h2>How may Ben confirm with you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review request</button></div></div>;
+  }
+  return null;
+}
+
+function FlowDrawer({ flow, initialStage, onClose }) {
+  const [step, setStep] = useState(flow === "discovery" && !initialStage ? 0 : 1);
+  const [form, setForm] = useState({ ...emptyForm, processStage: initialStage || "" });
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const flowTitle = { discovery: "Vehicle Discovery", trade: "Trade / Sell", ask: "Ask Ben", appointment: "Appointment Request" }[flow];
+  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const go = (nextStep) => { setError(""); setStep(nextStep); };
+  const validateContact = () => !form.firstName.trim() || !form.lastName.trim() ? "Please add your first and last name." : !form.phone.trim() && !form.email.trim() ? "Please add either a phone number or email." : !form.consent ? "Please confirm that Ben may contact you about this request." : "";
+
+  function discoveryNext() {
+    if (step === 1 && form.processStage === "I know exactly what I want" && (!form.vehicleYear || !form.vehicleMake || !form.vehicleModel)) { setError("Please add the year, make, and model so Ben knows what to verify."); return; }
+    if (step === 4) { const contactError = validateContact(); if (contactError) { setError(contactError); return; } }
+    go(step + 1);
+  }
+
+  function standardNext(reviewStep) {
+    const contactStep = flow === "trade" ? 3 : 2;
+    if (step === contactStep) { const contactError = validateContact(); if (contactError) { setError(contactError); return; } }
+    if (flow === "trade" && step === 1 && (!form.tradeYear || !form.tradeMake || !form.tradeModel)) { setError("Please add the year, make, and model of the vehicle."); return; }
+    if (flow === "ask" && step === 1 && !form.question.trim()) { setError("Please add the question you want Ben to answer."); return; }
+    go(Math.min(step + 1, reviewStep));
+  }
+
+  const reviewEntries = useMemo(() => reviewKeys[flow].map((key) => [key, form[key]]).filter(([, value]) => value !== "" && value !== null && value !== undefined), [form, flow]);
+
+  const smsMessage = useMemo(() => {
+    const lines = [`Hi Ben, I completed a ${flowTitle} request on BenSimple.co.`];
+    reviewEntries.forEach(([key, value]) => lines.push(`${labels[key] || key}: ${value}`));
+    return `sms:${PHONE}?&body=${encodeURIComponent(lines.join("\n"))}`;
+  }, [flowTitle, reviewEntries]);
+
+  async function sendLead() {
+    setSubmitting(true); setError("");
+    try { await submitLead({ ...form, intent: flowTitle, leadType: flow }); setComplete(true); }
+    catch { setError("That request did not save. You can still text Ben with the prepared summary below."); }
     finally { setSubmitting(false); }
   }
 
-  const showTrade = ["Sell","Trade"].includes(form.intent);
+  const reviewStep = flow === "trade" ? 4 : 3;
+  const progress = complete ? 1 : flow === "discovery" ? Math.max(step, 1) / 6 : Math.max(step, 1) / reviewStep;
 
-  return (
-    <main>
-      <div className="grain" />
-      <header className="nav shell">
-        <a className="brandLockup" href="#top" aria-label="BenSimple home"><span className="brandBen">Ben</span><span className="brandSimple">Simple.</span><small>IT'S BENSIMPLE ALL ALONG.</small></a>
-        <nav className="desktopNav"><a href="/specials">Specials</a><a href="#help">Car Help</a><a href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a></nav>
-        <a className="pill ghost" href={"tel:" + PHONE}>Call Ben</a>
-      </header>
+  return <div className="flowOverlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside className="flowDrawer" aria-label={flowTitle}><header className="flowHeader"><div><span>Ben LaVelle</span><small>Butte Auto · Butte, Montana</small></div><button type="button" onClick={onClose} aria-label="Close">×</button></header><div className="flowProgress"><span style={{ width: `${Math.min(progress * 100, 100)}%` }} /></div>
+    {complete ? <div className="flowStep successStep"><span className="sectionLabel">Request received</span><h2>Ben has the details.</h2>{flow === "discovery" ? <p className="handoffCopy">Okay, got it. I think I have a few options that could be a good fit, but I want Ben to verify that they’re still available and confirm the current details. I’ll have him reach out to you personally.</p> : <p>Ben will review your request and follow up personally using the contact method you selected.</p>}<div className="flowButtons"><a className="button primary" href={smsMessage}>Text the summary to Ben</a><button type="button" className="button secondary" onClick={onClose}>Close</button></div></div> : flow === "discovery" ? <>
+      {step === 0 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery</span><h2>Where are you in the process?</h2><p>Still browsing and test driving, looking for the perfect style or fit? Let’s walk through a few of the basics and narrow it down together.</p><div className="stageChoices">{["I know exactly what I want", "I have a few options in mind", "I’m still narrowing it down"].map((stage) => <button type="button" key={stage} onClick={() => { update("processStage", stage); go(1); }}><strong>{stage}</strong><span>{stage === "I know exactly what I want" ? "Year, make, model, trim, and details" : stage === "I have a few options in mind" ? "Compare the vehicles already on your list" : "Start with how you drive and what you need"}</span></button>)}</div></div>}
+      {step === 1 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Vehicle</span><h2>{form.processStage === "I know exactly what I want" ? "Which vehicle are you looking for?" : form.processStage === "I have a few options in mind" ? "What is already on your list?" : "What kind of vehicle are you considering?"}</h2>{form.processStage === "I know exactly what I want" && <><div className="fieldGrid three"><TextField label="Year" required value={form.vehicleYear} onChange={(value) => update("vehicleYear", value)} /><TextField label="Make" required value={form.vehicleMake} onChange={(value) => update("vehicleMake", value)} /><TextField label="Model" required value={form.vehicleModel} onChange={(value) => update("vehicleModel", value)} /></div><div className="fieldGrid two"><TextField label="Trim" value={form.vehicleTrim} onChange={(value) => update("vehicleTrim", value)} /><TextField label="Preferred color" value={form.preferredColor} onChange={(value) => update("preferredColor", value)} /></div><p className="fieldPrompt">New, used, or either?</p><ChoiceRow options={["New", "Used", "Either"]} value={form.vehicleCondition} onChange={(value) => update("vehicleCondition", value)} /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /></>}{form.processStage === "I have a few options in mind" && <><TextArea label="Vehicles or models already considered" value={form.modelsConsidered} onChange={(value) => update("modelsConsidered", value)} placeholder="List the vehicles already on your radar" /><div className="fieldGrid two"><TextArea label="What did you like?" value={form.liked} onChange={(value) => update("liked", value)} /><TextArea label="What did you not like?" value={form.disliked} onChange={(value) => update("disliked", value)} /></div><TextField label="Preferred body style" value={form.bodyStyle} onChange={(value) => update("bodyStyle", value)} placeholder="Truck, SUV, crossover, car" /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /><div className="fieldGrid three"><TextField label="Seating needs" value={form.seating} onChange={(value) => update("seating", value)} placeholder="5, 6 or more" /><SelectField label="Third row" value={form.thirdRow} onChange={(value) => update("thirdRow", value)} options={["No preference", "Required", "Nice to have", "Not needed"]} /><TextField label="Ground clearance" value={form.groundClearance} onChange={(value) => update("groundClearance", value)} placeholder="Standard, extra, unsure" /></div></>}{form.processStage === "I’m still narrowing it down" && <><p className="fieldPrompt">Start with a body style</p><ChoiceRow options={["Truck", "SUV", "Crossover", "Car", "Open to ideas"]} value={form.bodyStyle} onChange={(value) => update("bodyStyle", value)} /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /><div className="fieldGrid three"><TextField label="Seating needs" value={form.seating} onChange={(value) => update("seating", value)} placeholder="5, 6 or more" /><SelectField label="Third row" value={form.thirdRow} onChange={(value) => update("thirdRow", value)} options={["No preference", "Required", "Nice to have", "Not needed"]} /><TextField label="Ground clearance" value={form.groundClearance} onChange={(value) => update("groundClearance", value)} placeholder="Standard, extra, unsure" /></div></>} {error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(0)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
+      {step === 2 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Priorities</span><h2>How does the vehicle need to work for you?</h2>{form.processStage !== "I know exactly what I want" && <><div className="fieldGrid two"><TextField label="Safety priorities" value={form.safety} onChange={(value) => update("safety", value)} /><TextField label="Towing needs" value={form.towing} onChange={(value) => update("towing", value)} /></div><div className="fieldGrid two"><TextField label="Cargo needs" value={form.cargo} onChange={(value) => update("cargo", value)} /><TextField label="Fuel economy" value={form.fuelEconomy} onChange={(value) => update("fuelEconomy", value)} /></div><div className="fieldGrid two"><TextArea label="Commute and driving use" value={form.drivingUse} onChange={(value) => update("drivingUse", value)} /><TextArea label="Montana and winter driving needs" value={form.winterNeeds} onChange={(value) => update("winterNeeds", value)} /></div><div className="fieldGrid two"><TextField label="Preferred brands" value={form.preferredBrands} onChange={(value) => update("preferredBrands", value)} /><TextField label="Brands you do not want" value={form.avoidedBrands} onChange={(value) => update("avoidedBrands", value)} /></div></>}<div className="fieldGrid two"><TextArea label="Must-have features" value={form.mustHaves} onChange={(value) => update("mustHaves", value)} /><TextArea label="Deal-breakers" value={form.dealBreakers} onChange={(value) => update("dealBreakers", value)} /></div><div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(1)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
+      {step === 3 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Budget and timing</span><h2>What should Ben work around?</h2><p className="fieldPrompt">How are you thinking about the budget?</p><ChoiceRow options={["Total budget", "Monthly budget", "Still deciding"]} value={form.budgetMode} onChange={(value) => update("budgetMode", value)} /><TextField label="Budget amount or range" value={form.budgetDetails} onChange={(value) => update("budgetDetails", value)} placeholder="$35,000 total or about $650 per month" /><p className="fieldPrompt">Will there be a trade-in?</p><ChoiceRow options={["Yes", "No", "Maybe"]} value={form.tradeIn} onChange={(value) => update("tradeIn", value)} /><SelectField label="Purchase timeline" value={form.purchaseTimeline} onChange={(value) => update("purchaseTimeline", value)} options={["Just researching", "Within 30 days", "Within 60 to 90 days", "When the right vehicle appears", "As soon as possible"]} /><div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(2)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
+      {step === 4 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Contact</span><h2>How may Ben reach you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(3)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Review request</button></div></div>}
+      {step === 5 && <ReviewStep title="Check your Vehicle Discovery request." entries={reviewEntries} error={error} submitting={submitting} onBack={() => go(4)} onSubmit={sendLead} sms={smsMessage} />}
+    </> : <StandardFlow flow={flow} step={step} form={form} update={update} error={error} next={() => standardNext(reviewStep)} back={() => go(step - 1)} reviewEntries={reviewEntries} reviewStep={reviewStep} submit={sendLead} submitting={submitting} sms={smsMessage} />}
+  </aside></div>;
+}
 
-      <section className="brandHero" id="top"><div className="shell brandHeroInner">
-        <div className="butteMark"><MineFrame /><span>BUTTE, MONTANA</span></div>
-        <div className="heroCopy">
-          <span className="eyebrow"><i /> BEN LAVELLE · BUTTE AUTO</span>
-          <h1>Looking for a vehicle?<br/><span>It's BenSimple all along.</span></h1>
-          <p className="heroWelcome">Glad you finally showed up. Let's get to work.</p>
-          <p className="lede">New, used, trade, locate, sell, or just ask a question. Start with what you need and I will help make the next step clear.</p>
-        </div>
-        <div className="hostStage">
-          <div className="hostCopy"><span className="hostKicker">YOUR LOCAL CAR GUY</span><strong>Buy. Sell. Trade. Locate. Learn.</strong><small>One place to start, even if you are not ready to buy anything.</small></div>
-          <div className="hostCharacterPending"><img src="/ben-profile.webp" alt="" /><span>HOST BEN<br/>CHARACTER STAGE</span></div>
-        </div>
-        <div className="heroMenu" aria-label="What can Ben help with?">{intents.map((intent)=><button key={intent} onClick={()=>startIntent(intent)}>{intent}</button>)}</div>
-      </div></section>
-
-      <section className="accomplish shell">
-        <div className="sectionHead"><span className="eyebrow"><i /> START HERE</span><h2>What can I help you accomplish today?</h2><p>Pick the closest answer. You do not have to know every detail before we start.</p></div>
-        <div className="actionGrid">
-          <button onClick={()=>startIntent("Buy")}><span>01</span><strong>Buy a vehicle</strong><small>New, used, or undecided.</small></button>
-          <button onClick={()=>startIntent("Sell")}><span>02</span><strong>Sell me your vehicle</strong><small>Tell me about it. Good, bad, ugly. I can work with honest.</small></button>
-          <button onClick={()=>startIntent("Trade")}><span>03</span><strong>Trade what you have</strong><small>Let's see what makes sense next.</small></button>
-          <button onClick={()=>startIntent("Locate")}><span>04</span><strong>Locate something specific</strong><small>Color, trim, drivetrain, budget. Give me the mission.</small></button>
-          <button onClick={()=>startIntent("Ask Question")}><span>05</span><strong>Ask a car question</strong><small>You do not have to be shopping to ask.</small></button>
-        </div>
-      </section>
-
-      <section className="specialFeature shell">
-        <div className="specialFeatureCopy"><span className="eyebrow"><i /> THIS MONTH</span><h2>Deals worth knowing about.</h2><p>Manager-confirmed offers get the BenSimple treatment. Regular inventory still lives on Butte Auto so you always land on the dealer's current vehicle listing.</p><div className="inlineActions"><a className="pill primary" href="/specials">See monthly specials</a><a className="pill secondary" href={INVENTORY} target="_blank" rel="noreferrer">Browse Butte Auto inventory</a></div></div>
-        <div className="specialHost"><span>HOST MOMENT</span><strong>"What about this deal?"</strong><small>This space changes with the month, promotion, sport, holiday, or dealership campaign.</small></div>
-      </section>
-
-      <section className="brandAccess shell">
-        <div><span className="eyebrow"><i /> BRAND ACCESS</span><h2>More choices than one badge.</h2><p>I can help across the Butte Auto group plus used inventory. The goal is the right fit, not forcing the vehicle sitting closest to my desk.</p></div>
-        <div className="logoRail">{[["ram","RAM"],["dodge","DODGE"],["chrysler","CHRYSLER"],["jeep","JEEP"],["chevrolet","CHEVROLET"],["gmc","GMC"],["toyota","TOYOTA"],["subaru","SUBARU"]].map(([slug,name])=><div className="oemLogo" key={name}><img src={"https://cdn.simpleicons.org/" + slug + "/FFFFFF"} alt="" onError={(e)=>{e.currentTarget.style.display="none";}} /><span>{name}</span></div>)}</div>
-      </section>
-
-      <section className="advice shell" id="help">
-        <div className="adviceTop"><div><span className="eyebrow"><i /> BENSIMPLE GARAGE</span><h2>Useful car stuff. Even when you are not buying.</h2><p>Tips, tools, recalls, features, ownership help, market changes, and whatever drivers should probably know right now.</p></div><div className="teacherBen"><img src="/ben-profile.webp" alt="" /><div><strong>Today's lesson:</strong><span>Cars do not have to be complicated.</span></div></div></div>
-        <div className="adviceGrid">{featuredAdvice.map((item)=><article key={item.title}><span>{item.tag}</span><h3>{item.title}</h3><p>{item.copy}</p>{item.href && <a href={item.href} target="_blank" rel="noreferrer">{item.cta} ↗</a>}</article>)}</div>
-      </section>
-
-      <section className="social shell"><div><span className="eyebrow"><i /> FOLLOW BENSIMPLE</span><h2>Cars, deals, help, Butte, and whatever is happening that day.</h2><p>The website is home base. Social is where BenSimple gets to move.</p></div><div className="socialButtons"><a className="socialBtn" href={FACEBOOK} target="_blank" rel="noreferrer">Facebook <span>Ben LaVelle</span></a><a className="socialBtn" href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <span>@benlavelle26</span></a><a className="socialBtn mutedSocial" href={"mailto:" + EMAIL}>Email <span>{EMAIL}</span></a></div></section>
-
-      <section className="finalCta shell"><div><span className="eyebrow"><i /> READY?</span><h2>Let's get to work.</h2><p>Tell me what you need. I will take it from there.</p></div><div className="inlineActions"><button className="pill primary" onClick={()=>{setStep(0);setDrawer(true);}}>Start with Ben</button><a className="pill secondary" href={"sms:" + PHONE}>Text {DISPLAY_PHONE}</a></div></section>
-
-      <footer className="shell footer"><a className="brandLockup footerBrand" href="#top"><span className="brandBen">Ben</span><span className="brandSimple">Simple.</span></a><p>Cars don't have to be complicated.</p><div className="footerLinks"><a href="/specials">Specials</a><a href="/legal">Disclosures & Privacy</a></div><span>Ben LaVelle · Butte Auto · Butte, Montana</span></footer>
-
-      <div className="mobileBar"><a href={"tel:" + PHONE}>Call</a><a href={"sms:" + PHONE}>Text</a><button onClick={()=>{setStep(0);setDrawer(true);}}>Start Here</button></div>
-
-      {drawer && <div className="overlay" onMouseDown={(e)=>{if(e.target===e.currentTarget)setDrawer(false);}}><div className="drawer guidedDrawer">
-        <button className="close" onClick={()=>setDrawer(false)} aria-label="Close">×</button>
-        <div className="progress"><span style={{width: ((step+1)*20) + "%"}} /></div>
-
-        {step===0 && <><span className="eyebrow"><i /> START HERE</span><h3>What can I help you accomplish today?</h3><ChoiceRow options={intents} value={form.intent} onChange={startIntent} /></>}
-
-        {step===1 && <><span className="eyebrow"><i /> VEHICLE</span><h3>What kind of vehicle are we working with?</h3>
-          <label>Vehicle type</label><ChoiceRow options={vehicleTypes} value={form.vehicleType} onChange={(v)=>update("vehicleType",v)} />
-          <label>New, used, or either?</label><ChoiceRow options={conditions} value={form.vehicleCondition} onChange={(v)=>update("vehicleCondition",v)} compact />
-          <div className="formGrid three">
-            <label>Year<select value={form.vehicleYear} onChange={(e)=>{update("vehicleYear",e.target.value);update("vehicleModel","");}}><option value="">Any year</option>{years.map((year)=><option key={year} value={year}>{year}</option>)}</select></label>
-            <label>Make<select value={form.vehicleMake} onChange={(e)=>{update("vehicleMake",e.target.value);update("vehicleModel","");}}><option value="">Any make</option>{makes.map((make)=><option key={make} value={make}>{make}</option>)}</select></label>
-            <label>Model<select value={form.vehicleModel} onChange={(e)=>update("vehicleModel",e.target.value)} disabled={!form.vehicleMake || !form.vehicleYear || vehicleDataLoading}><option value="">{vehicleDataLoading ? "Loading..." : "Any model"}</option>{models.map((model)=><option key={model} value={model}>{model}</option>)}</select></label>
-          </div>
-          <div className="stepActions"><button className="plainBack" onClick={()=>setStep(0)}>Back</button><button className="pill primary" onClick={()=>setStep(2)}>Continue</button></div>
-        </>}
-
-        {step===2 && <><span className="eyebrow"><i /> BUDGET</span><h3>What would you like me to work around?</h3>
-          <ChoiceRow options={["Price","Monthly Payment"]} value={form.budgetMode==="price"?"Price":"Monthly Payment"} onChange={(v)=>update("budgetMode",v==="Price"?"price":"payment")} compact />
-          {form.budgetMode==="price" ? <div className="sliderBlock"><div className="sliderValue">{money(form.budgetMin)} to {money(form.budgetMax)}</div><label>Minimum<input type="range" min="0" max="100000" step="2500" value={form.budgetMin} onChange={(e)=>update("budgetMin",Math.min(Number(e.target.value),form.budgetMax))}/></label><label>Maximum<input type="range" min="5000" max="125000" step="2500" value={form.budgetMax} onChange={(e)=>update("budgetMax",Math.max(Number(e.target.value),form.budgetMin))}/></label></div>
-          : <div className="sliderBlock"><div className="sliderValue">Up to $ {form.paymentMax}/month</div><label>Target monthly payment<input type="range" min="200" max="1800" step="50" value={form.paymentMax} onChange={(e)=>update("paymentMax",Number(e.target.value))}/></label><p className="formFine">Payment is a target, not a quote. Actual payment depends on vehicle, financing, term, taxes, fees, credit, and approved lender terms.</p></div>}
-          {showTrade && <div className="tradeBlock"><span className="miniSection">YOUR CURRENT VEHICLE</span><div className="formGrid three"><label>Year<input inputMode="numeric" value={form.tradeYear} onChange={(e)=>update("tradeYear",e.target.value)} placeholder="2019"/></label><label>Make<input value={form.tradeMake} onChange={(e)=>update("tradeMake",e.target.value)} placeholder="Chevrolet"/></label><label>Model<input value={form.tradeModel} onChange={(e)=>update("tradeModel",e.target.value)} placeholder="Silverado"/></label></div><div className="formGrid two"><label>VIN <span className="optional">optional</span><input value={form.tradeVin} onChange={(e)=>update("tradeVin",e.target.value.toUpperCase())} maxLength="17" placeholder="17-character VIN"/></label><label>Mileage<input inputMode="numeric" value={form.tradeMileage} onChange={(e)=>update("tradeMileage",e.target.value.replace(/\D/g,""))} placeholder="82000"/></label></div><label>Is there a lien on the vehicle?</label><ChoiceRow options={["Yes","No"]} value={form.tradeHasLien===null?"":form.tradeHasLien?"Yes":"No"} onChange={(v)=>update("tradeHasLien",v==="Yes")} compact/><label>Tell me about it. Good, bad, ugly. <span className="optional">optional</span><textarea value={form.tradeStory} onChange={(e)=>update("tradeStory",e.target.value)} placeholder="Condition, damage, recent work, tires, things you love, things you don't..."/></label></div>}
-          <label>Anything else I should know? <span className="optional">optional</span><textarea value={form.note} onChange={(e)=>update("note",e.target.value)} placeholder="Color, towing, commute, must-have features, deal-breakers, whatever matters."/></label>
-          <div className="stepActions"><button className="plainBack" onClick={()=>setStep(1)}>Back</button><button className="pill primary" onClick={()=>setStep(3)}>Continue</button></div>
-        </>}
-
-        {step===3 && <><span className="eyebrow"><i /> CONTACT</span><h3>How may I reach you?</h3>
-          <div className="formGrid two"><label>First name <span className="required">required</span><input value={form.firstName} onChange={(e)=>update("firstName",e.target.value)} autoComplete="given-name"/></label><label>Last name <span className="required">required</span><input value={form.lastName} onChange={(e)=>update("lastName",e.target.value)} autoComplete="family-name"/></label></div>
-          <div className="formGrid two"><label>Phone <span className="optional">phone or email required</span><input inputMode="tel" value={form.phone} onChange={(e)=>update("phone",e.target.value)} autoComplete="tel" placeholder="406-555-1234"/></label><label>Email <span className="optional">phone or email required</span><input inputMode="email" value={form.email} onChange={(e)=>update("email",e.target.value)} autoComplete="email" placeholder="you@example.com"/></label></div>
-          <label>How would you prefer I contact you?</label><ChoiceRow options={contactModes} value={form.preferredContact} onChange={(v)=>update("preferredContact",v)} compact/>
-          <label>What time usually works best?</label><ChoiceRow options={contactTimes} value={form.preferredTime} onChange={(v)=>update("preferredTime",v)} compact/>
-          <label className="consentRow"><input type="checkbox" checked={form.consent} onChange={(e)=>update("consent",e.target.checked)}/><span>I agree that Ben may contact me about this request. Message and data rates may apply. <a href="/legal" target="_blank">Privacy & disclosures</a>.</span></label>
-          {error && <div className="formError">{error}</div>}
-          <div className="stepActions"><button className="plainBack" onClick={()=>setStep(2)}>Back</button><button className="pill primary" onClick={finishLead} disabled={submitting}>{submitting?"Sending...":"Send this to Ben"}</button></div>
-          <p className="formFine">Only your name and one way to reach you are required. Everything else simply helps me be useful when I respond.</p>
-        </>}
-
-        {step===4 && <><span className="eyebrow"><i /> GOT IT</span><h3>Thanks. I have what you sent.</h3><p className="drawerCopy">If you want the quickest possible response, open a text to me now. I already built the message from what you entered.</p><a className="pill primary full center" href={sms}>Text Ben now</a><a className="pill secondary full center" href={INVENTORY} target="_blank" rel="noreferrer">Browse Butte Auto inventory</a><button className="plainLink buttonLink" onClick={reset}>Start another request</button></>}
-      </div></div>}
-    </main>
-  );
+export default function Home() {
+  const [activeFlow, setActiveFlow] = useState(null);
+  const [initialStage, setInitialStage] = useState("");
+  function openFlow(flow, stage = "") { setInitialStage(stage); setActiveFlow(flow); track("flow_opened", { flow, process_stage: stage || null }); }
+  return <main>
+    <header className="siteHeader shell"><a className="wordmarkLink" href="#top" aria-label="BenSimple home"><BrandWordmark priority /></a><div className="headerIdentity"><strong>Ben LaVelle</strong><span>Butte Auto · Butte, Montana</span></div><nav><a href="#discovery">Vehicle Discovery</a><a href="#trade">Trade / Sell</a><a href="#ask">Ask Ben</a><a href="#helps">Ben Helps</a><a href="#contact">Contact</a><a className="inventoryLink" href={INVENTORY} target="_blank" rel="noreferrer">Browse Inventory</a></nav></header>
+    <section className="hero shell" id="top" aria-labelledby="heroTitle"><div className="heroRule" /><div className="heroCopy"><span className="heroKicker">Ben LaVelle · Butte, Montana</span><h1 id="heroTitle"><span>Cars don’t</span><span>have to be</span><span>complicated.</span></h1><p>Buying, trading, finding, or figuring one out?</p><div className="heroActions"><button className="button primary" onClick={() => openFlow("discovery")}>Start Vehicle Discovery</button><button className="button secondary" onClick={() => openFlow("ask")}>Ask Ben</button><a className="textLink" href={INVENTORY} target="_blank" rel="noreferrer">Browse Live Inventory</a></div></div><figure className="heroPortrait"><img src="/BEN_MASTER_PROFILE_APPROVED.png" alt="Approved BenSimple character artwork of Ben LaVelle" /><figcaption><strong>Ben LaVelle</strong><span>at Butte Auto</span></figcaption></figure></section>
+    <div className="marquee" aria-label="BenSimple brand message"><div><span>CARS DON’T HAVE TO BE COMPLICATED</span><i>•</i><span>BUY</span><i>•</i><span>TRADE</span><i>•</i><span>FIND</span><i>•</i><span>LEARN</span><i>•</i><span>ASK BEN</span><i>•</i><span>IT’S BENSIMPLE ALL ALONG</span><i>•</i><span aria-hidden="true">CARS DON’T HAVE TO BE COMPLICATED</span><i aria-hidden="true">•</i><span aria-hidden="true">BUY</span><i aria-hidden="true">•</i><span aria-hidden="true">TRADE</span><i aria-hidden="true">•</i><span aria-hidden="true">FIND</span><i aria-hidden="true">•</i><span aria-hidden="true">LEARN</span><i aria-hidden="true">•</i><span aria-hidden="true">ASK BEN</span><i aria-hidden="true">•</i><span aria-hidden="true">IT’S BENSIMPLE ALL ALONG</span></div></div>
+    <section className="routeIndex shell" aria-labelledby="routeTitle"><header><span className="sectionLabel">Start here</span><h2 id="routeTitle">What are you here to do?</h2></header><div className="routeList"><button onClick={() => openFlow("discovery")}><b>01</b><strong>Discover your next vehicle</strong><span>Know exactly what you want or start with the basics.</span></button><button onClick={() => openFlow("trade")}><b>02</b><strong>Trade or sell a vehicle</strong><span>Share the vehicle, mileage, condition, and payoff.</span></button><button onClick={() => openFlow("ask")}><b>03</b><strong>Ask Ben a vehicle question</strong><span>Buying, ownership, comparisons, or troubleshooting.</span></button><a href={INVENTORY} target="_blank" rel="noreferrer"><b>04</b><strong>Browse live inventory</strong><span>Open current listings at Butte Auto.</span></a></div></section>
+    <section className="discoverySection" id="discovery"><div className="discoveryCopy"><span className="sectionLabel">Vehicle Discovery</span><h2>Still browsing and test driving, looking for the perfect style or fit?</h2><p>Let’s walk through a few of the basics and narrow it down together.</p></div><div className="discoveryBranches"><p>Where are you in the process?</p>{["I know exactly what I want", "I have a few options in mind", "I’m still narrowing it down"].map((stage, index) => <button key={stage} onClick={() => openFlow("discovery", stage)}><b>0{index + 1}</b><strong>{stage}</strong><span>{index === 0 ? "Year, make, model, trim, and details" : index === 1 ? "Compare what is already on your list" : "Start with how you drive and what you need"}</span></button>)}</div></section>
+    <section className="brandAccess shell"><div><span className="sectionLabel">Brand access through Butte Auto</span><h2>Eight new-vehicle brands.<br />Used vehicles from every brand.</h2><p>BenSimple is the brand. Butte Auto is the dealership affiliation, live inventory source, and transaction platform.</p></div><ol>{["RAM", "Dodge", "Chrysler", "Jeep", "Chevrolet", "GMC", "Toyota", "Subaru"].map((brand, index) => <li key={brand}><strong>{brand}</strong><span>0{index + 1}</span></li>)}<li className="used"><strong>Used vehicles</strong><span>Any brand</span></li></ol></section>
+    <section className="inventorySection"><div><span className="sectionLabel">Live inventory</span><h2>Browse Live Inventory at Butte Auto</h2><p>Inventory changes daily. For the most accurate pricing, availability, and vehicle details, browse Butte Auto’s live inventory or contact Ben directly.</p></div><nav><a href={NEW_INVENTORY} target="_blank" rel="noreferrer"><strong>Shop New Inventory</strong><span>Official live listings</span></a><a href={USED_INVENTORY} target="_blank" rel="noreferrer"><strong>Shop Used Inventory</strong><span>Official live listings</span></a><a href={INVENTORY} target="_blank" rel="noreferrer"><strong>Browse Everything</strong><span>New and used</span></a></nav></section>
+    <section className="tradeSection shell" id="trade"><div><span className="sectionLabel">Trade / Sell</span><h2>Thinking about trading or selling your vehicle?</h2></div><div><p>Start with the vehicle, mileage, condition, and payoff. Add what you are considering next if you already know.</p><ul><li>Trade or sell</li><li>VIN optional</li><li>Preferred contact method</li><li>Photos can follow by text</li></ul><button className="button primary" onClick={() => openFlow("trade")}>Start Trade Request</button></div></section>
+    <section className="askSection" id="ask"><span className="sectionLabel">Ask Ben</span><h2>Have a vehicle question?<br />Ask Ben.</h2><div><p>Buying, trading, features, comparisons, ownership, troubleshooting, towing, AWD, 4WD, trims, model differences, or Montana driving needs.</p><button className="button dark" onClick={() => openFlow("ask")}>Send a Question</button></div></section>
+    <section className="helpsSection shell" id="helps"><header><span className="sectionLabel">Ben Helps</span><h2>Useful automotive answers.</h2><p>Choose a topic to start a question.</p></header><div>{[["AWD vs 4WD", "Montana traction and use"], ["Trade value", "Condition, mileage, payoff, and timing"], ["New vs used", "Compare the practical differences"], ["Towing and payload", "Match the vehicle to the job"], ["Trim levels and features", "What changes and what matters"], ["Montana winter driving", "Tires, clearance, traction, and preparation"]].map(([topic, note]) => <button key={topic} onClick={() => openFlow("ask")}><strong>{topic}</strong><span>{note}</span></button>)}</div></section>
+    <figure className="masterBanner"><img src="/BEN_MASTER_BANNER_APPROVED.jpg" alt="Approved BenSimple and Butte Auto banner" /></figure>
+    <section className="contactSection shell" id="contact"><div><span className="sectionLabel">Contact / Appointments</span><h2>Ben LaVelle</h2><p>Butte, Montana</p></div><div className="contactDirect"><a className="phone" href={`tel:${PHONE}`}>{DISPLAY_PHONE}</a><a href={`mailto:${EMAIL}`}>{EMAIL}</a><div><a className="button primary" href={`sms:${PHONE}`}>Text Ben</a><a className="button secondary" href={`tel:${PHONE}`}>Call Ben</a><button className="button secondary" onClick={() => openFlow("appointment")}>Request an Appointment</button></div></div></section>
+    <footer className="siteFooter shell"><a className="wordmarkLink footerWordmark" href="#top" aria-label="BenSimple home"><BrandWordmark /></a><p>Ben LaVelle · Butte Auto · Butte, Montana</p><nav><a href="/specials">Specials</a><a href="/legal">Privacy</a><a href={FACEBOOK} target="_blank" rel="noreferrer">Facebook</a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a></nav><small>BenSimple is Ben LaVelle’s personal automotive brand. Butte Auto is the dealership affiliation and official inventory source.</small></footer>
+    {activeFlow && <FlowDrawer key={`${activeFlow}-${initialStage}`} flow={activeFlow} initialStage={initialStage} onClose={() => setActiveFlow(null)} />}
+  </main>;
 }

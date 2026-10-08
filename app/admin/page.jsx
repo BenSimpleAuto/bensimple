@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import BrandWordmark from "../components/BrandWordmark";
 
 const ADMIN_EMAIL = "ben@bensimple.co";
 
@@ -83,14 +84,14 @@ export default function AdminPage() {
   }, [leads,events]);
 
   if (loading && !session) {
-    return <main className="adminPage"><div className="adminAuth"><h1>BenSimple.</h1><p>Loading dashboard…</p></div></main>;
+    return <main className="adminPage"><div className="adminAuth"><h1>Loading dashboard.</h1></div></main>;
   }
 
   if (!session) {
     return (
       <main className="adminPage">
         <div className="adminAuth">
-          <a className="brand" href="/">BenSimple<span>.</span></a>
+          <a className="wordmarkLink" href="/" aria-label="BenSimple home"><BrandWordmark /></a>
           <span className="eyebrow"><i /> PRIVATE DASHBOARD</span>
           <h1>Sign in to your sales dashboard.</h1>
           <p>This dashboard is restricted to {ADMIN_EMAIL}.</p>
@@ -119,7 +120,7 @@ export default function AdminPage() {
     <main className="adminPage">
       <header className="adminTop">
         <div>
-          <a className="brand" href="/">BenSimple<span>.</span></a>
+          <a className="wordmarkLink" href="/" aria-label="BenSimple home"><BrandWordmark /></a>
           <span>Lead & conversion dashboard</span>
         </div>
         <div className="adminTopActions">
@@ -153,8 +154,8 @@ export default function AdminPage() {
                     {l.phone && <a href={`tel:${l.phone}`}>{l.phone}</a>}
                     {l.email && <a href={`mailto:${l.email}`}>{l.email}</a>}
                   </td>
-                  <td>{l.need || "—"}{l.note && <small>{l.note}</small>}</td>
-                  <td>{l.vehicle || "—"}{l.trade && <small>Trade: {l.trade}</small>}</td>
+                  <td>{l.need || "Not provided"}{l.note && <small>{l.note}</small>}</td>
+                  <td>{l.vehicle || "Not provided"}{l.trade && <small>Trade: {l.trade}</small>}</td>
                   <td>{l.utm_source || l.source || "direct"}{l.utm_campaign && <small>{l.utm_campaign}</small>}</td>
                   <td>
                     <select value={l.status} onChange={(e)=>updateStatus(l.id,e.target.value)}>

@@ -1,50 +1,49 @@
 # BenSimple Automotive
 
-Fresh automotive build for BenSimple.
+Mobile-first personal-brand and automotive lead site for Ben LaVelle in Butte, Montana.
 
-## Brand
-- BenSimple.
-- Cars don't have to be complicated.
-- It's BenSimple all along.
-- Ben LaVelle at Butte Auto, Butte, Montana.
+## Brand hierarchy
 
-## Current build
-- Mobile-first lead landing page
-- Call / text / email actions
-- Butte Auto inventory link
-- Conversational "Tell Ben what you need" flow
-- Uses the approved BenSimple profile caricature
+- BenSimple is the master brand.
+- Butte Auto is the dealership affiliation, official live inventory source, and transaction platform.
+- Supported new-vehicle access: RAM, Dodge, Chrysler, Jeep, Chevrolet, GMC, Toyota, and Subaru.
+- Used vehicles may come from any brand.
 
-## Architecture
-The original general-purpose BenSimple application is preserved on the branch:
-`legacy-general-bensimple-2026`
+## Primary customer paths
 
-Automotive development lives on:
-`automotive-2026`
+- Vehicle Discovery with exact-vehicle, comparison, and narrowing-down branches
+- Trade or Sell request
+- Ask Ben
+- Ben Helps topic starters
+- Contact and appointment request
+- Direct links to Butte Auto's official inventory
 
-Backend lead storage and attribution will be connected to a clean Supabase project before production cutover.
+## Brand assets and typography
 
+The approved profile and banner masters are stored in `public/` and must remain unchanged. The application expects the final transparent wordmark at `public/BENSIMPLE_WORDMARK_APPROVED.png`. That file is not yet available and must not be recreated from text or cropped from the banner.
 
-## Social rollout
-Live:
-- Facebook: https://www.facebook.com/benlavelle26
-- Instagram: https://www.instagram.com/benlavelle26/
+The site self-hosts Barlow Condensed through `@fontsource/barlow-condensed`:
 
-Planned fresh BenSimple accounts:
-- YouTube
-- TikTok
-- Snapchat
+- 800 italic for primary headlines
+- 700 for secondary headings and interface text
+- 500 or 400 for supporting and body text
 
-Do not show dead social buttons on the production site. Add each platform only after the account exists.
+See `BRAND_ASSET_LOCK.md` for the canonical asset and color rules.
 
-## Monthly specials publishing gate
-A special does not go live until the following are confirmed:
-- exact vehicle/model or stock number
-- actual all-consumer advertised price
-- dealer-required fees included in advertised price
-- conditional incentive separated and eligibility stated
-- expiration date or program window
-- manager verification date
-- current availability
+## Local work
 
-The public page reads from `data/specials.js`.
+Automotive development is on the `automotive-2026` branch. Run `pnpm dev` for local review and `pnpm build` for the production build check.
+
+## Lead system
+
+The customer flows post structured leads and attribution to the configured Supabase `auto_leads` and `auto_events` tables. The submission review step does not provide automated vehicle recommendations. Ben verifies current availability, pricing, and vehicle details before personally following up.
+
+## Deployment gate
+
+Do not deploy production until all of these are confirmed:
+
+- final transparent wordmark is present
+- Supabase lead insert succeeds under the current row-level security policy
+- the Vercel project is linked to `BenSimpleAuto/bensimple`
+- the desired production branch is explicitly selected
+- responsive and end-to-end preview checks pass

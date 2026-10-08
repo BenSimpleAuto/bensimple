@@ -1,7 +1,8 @@
 import { specials } from "../../data/specials";
+import BrandWordmark from "../components/BrandWordmark";
 
 export const metadata = {
-  title: "Monthly Specials | BenSimple.",
+  title: "Monthly Specials | BenSimple",
   description: "Current manager-approved vehicle specials, rebates, and featured opportunities from Ben LaVelle at Butte Auto."
 };
 
@@ -12,7 +13,7 @@ export default function SpecialsPage() {
     <main>
       <div className="grain" />
       <header className="nav shell">
-        <a className="brand" href="/">BenSimple<span>.</span></a>
+        <a className="wordmarkLink" href="/" aria-label="BenSimple home"><BrandWordmark /></a>
         <div className="navRight">
           <a className="navLink" href="/">Home</a>
           <a className="pill ghost" href={`tel:${PHONE}`}>Call Ben</a>

@@ -1,5 +1,7 @@
+import BrandWordmark from "../components/BrandWordmark";
+
 export const metadata = {
-  title: "Disclosures & Privacy | BenSimple.",
+  title: "Disclosures & Privacy | BenSimple",
   description: "BenSimple automotive advertising, pricing, privacy, and website disclosures."
 };
 
@@ -8,7 +10,7 @@ export default function LegalPage() {
     <main>
       <div className="grain" />
       <header className="nav shell">
-        <a className="brand" href="/">BenSimple<span>.</span></a>
+        <a className="wordmarkLink" href="/" aria-label="BenSimple home"><BrandWordmark /></a>
         <div className="navRight">
           <a className="navLink" href="/specials">Specials</a>
           <a className="navLink" href="/">Home</a>
