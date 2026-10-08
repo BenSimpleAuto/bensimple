@@ -20,7 +20,7 @@ Mobile-first personal-brand and automotive lead site for Ben LaVelle in Butte, M
 
 ## Brand assets and typography
 
-The approved profile and banner masters are stored in `public/` and must remain unchanged. The application expects the final transparent wordmark at `public/BENSIMPLE_WORDMARK_APPROVED.png`. That file is not yet available and must not be recreated from text or cropped from the banner.
+The approved profile, banner, and transparent wordmark masters are stored in `public/` and must remain unchanged. The wordmark is used directly from `public/BENSIMPLE_WORDMARK_APPROVED.png`; it must not be recreated from text or cropped from the banner.
 
 The site self-hosts Barlow Condensed through `@fontsource/barlow-condensed`:
 

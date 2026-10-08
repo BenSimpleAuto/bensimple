@@ -4,16 +4,17 @@
 
 - `public/BEN_MASTER_PROFILE_APPROVED.png`
 - `public/BEN_MASTER_BANNER_APPROVED.jpg`
+- `public/BENSIMPLE_WORDMARK_APPROVED.png`
 
-Both files must remain unchanged. The profile and banner are separate assets and must not be merged, redrawn, recolored, traced, or regenerated.
+All three files must remain unchanged. The profile and banner are separate assets and must not be merged, redrawn, recolored, traced, or regenerated.
 
-## Required approved wordmark
+## Approved wordmark
 
-The website is prepared to use the transparent wordmark at:
+The website uses the approved transparent wordmark at:
 
 `public/BENSIMPLE_WORDMARK_APPROVED.png`
 
-That file is not currently present in the repository, project sources, Graphics work hub attachments, local downloads, or Codex attachments. Do not create a substitute, crop it from the banner, or imitate it with styled text. Add only the final approved transparent master from the Graphics work hub.
+This file is the approved Graphics work hub master, saved without changing its image data. Its SHA-256 is `B5F50F328E7D2E926370EC86FF6569AD4D46554BFE01F14A0E113A37AFDB2708`. Do not create a substitute, crop it from the banner, or imitate it with styled text.
 
 ## Typography
 
