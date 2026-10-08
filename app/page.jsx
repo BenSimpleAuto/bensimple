@@ -1,165 +1,94 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import BdcAgent from "./components/BdcAgent";
 import BrandWordmark from "./components/BrandWordmark";
-import { submitLead, track } from "../lib/track";
+import QuickLeadForm from "./components/QuickLeadForm";
 
 const PHONE = "4063995959";
 const DISPLAY_PHONE = "406-399-5959";
 const EMAIL = "ben@bensimple.co";
 const INVENTORY = "https://www.butteauto.com/all-inventory/index.htm";
-const NEW_INVENTORY = "https://www.butteauto.com/new-inventory/index.htm";
-const USED_INVENTORY = "https://www.butteauto.com/used-inventory/index.htm";
 const INSTAGRAM = "https://www.instagram.com/benlavelle26/";
 const FACEBOOK = "https://www.facebook.com/benlavelle26";
 
-const emptyForm = {
-  processStage: "", vehicleYear: "", vehicleMake: "", vehicleModel: "", vehicleTrim: "", preferredColor: "", vehicleCondition: "Either",
-  modelsConsidered: "", liked: "", disliked: "", bodyStyle: "", drivetrain: "No preference", seating: "", thirdRow: "No preference",
-  groundClearance: "", safety: "", towing: "", cargo: "", fuelEconomy: "", drivingUse: "", winterNeeds: "", preferredBrands: "",
-  avoidedBrands: "", mustHaves: "", dealBreakers: "", budgetMode: "Total budget", budgetDetails: "", tradeIn: "Maybe",
-  purchaseTimeline: "Just researching", tradeAction: "Trade", tradeYear: "", tradeMake: "", tradeModel: "", tradeMileage: "",
-  tradeVin: "", tradeCondition: "", tradePayoff: "", replacementInterest: "", questionTopic: "General automotive help", question: "",
-  appointmentReason: "Vehicle shopping", appointmentDate: "", appointmentTime: "", firstName: "", lastName: "", phone: "", email: "",
-  preferredContact: "Text", notes: "", consent: false
-};
-
-const labels = {
-  processStage: "Where they are in the process", vehicleYear: "Year", vehicleMake: "Make", vehicleModel: "Model", vehicleTrim: "Trim",
-  preferredColor: "Preferred color", vehicleCondition: "New or used", modelsConsidered: "Vehicles already considered", liked: "What they liked",
-  disliked: "What they did not like", bodyStyle: "Body style", drivetrain: "Drivetrain", seating: "Seating needs", thirdRow: "Third row",
-  groundClearance: "Ground clearance", safety: "Safety priorities", towing: "Towing needs", cargo: "Cargo needs", fuelEconomy: "Fuel economy",
-  drivingUse: "Commute and driving use", winterNeeds: "Montana and winter needs", preferredBrands: "Preferred brands", avoidedBrands: "Brands to avoid",
-  mustHaves: "Must-have features", dealBreakers: "Deal-breakers", budgetMode: "Budget type", budgetDetails: "Budget", tradeIn: "Trade-in",
-  purchaseTimeline: "Timeline", tradeAction: "Trade or sell", tradeYear: "Trade year", tradeMake: "Trade make", tradeModel: "Trade model",
-  tradeMileage: "Mileage", tradeVin: "VIN", tradeCondition: "Condition", tradePayoff: "Payoff", replacementInterest: "Considering next",
-  questionTopic: "Question topic", question: "Question", appointmentReason: "Appointment reason", appointmentDate: "Preferred date",
-  appointmentTime: "Preferred time", firstName: "First name", lastName: "Last name", phone: "Phone", email: "Email",
-  preferredContact: "Preferred contact", notes: "Notes"
-};
-
-const reviewKeys = {
-  discovery: ["processStage", "vehicleYear", "vehicleMake", "vehicleModel", "vehicleTrim", "preferredColor", "vehicleCondition", "modelsConsidered", "liked", "disliked", "bodyStyle", "drivetrain", "seating", "thirdRow", "groundClearance", "safety", "towing", "cargo", "fuelEconomy", "drivingUse", "winterNeeds", "preferredBrands", "avoidedBrands", "mustHaves", "dealBreakers", "budgetMode", "budgetDetails", "tradeIn", "purchaseTimeline", "firstName", "lastName", "phone", "email", "preferredContact", "notes"],
-  trade: ["tradeAction", "tradeYear", "tradeMake", "tradeModel", "tradeMileage", "tradeVin", "tradeCondition", "tradePayoff", "replacementInterest", "notes", "firstName", "lastName", "phone", "email", "preferredContact"],
-  ask: ["questionTopic", "question", "firstName", "lastName", "phone", "email", "preferredContact"],
-  appointment: ["appointmentReason", "appointmentDate", "appointmentTime", "notes", "firstName", "lastName", "phone", "email", "preferredContact"]
-};
-
-function ChoiceRow({ options, value, onChange }) {
-  return <div className="choiceRow">{options.map((option) => <button type="button" key={option} className={value === option ? "choice active" : "choice"} onClick={() => onChange(option)}>{option}</button>)}</div>;
-}
-
-function TextField({ label, value, onChange, placeholder = "", type = "text", required = false }) {
-  return <label className="fieldLabel"><span>{label}{required && <b>Required</b>}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>;
-}
-
-function TextArea({ label, value, onChange, placeholder = "" }) {
-  return <label className="fieldLabel"><span>{label}</span><textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} /></label>;
-}
-
-function SelectField({ label, value, onChange, options }) {
-  return <label className="fieldLabel"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>;
-}
-
-function ContactFields({ form, update }) {
-  return <><div className="fieldGrid two"><TextField label="First name" required value={form.firstName} onChange={(value) => update("firstName", value)} /><TextField label="Last name" required value={form.lastName} onChange={(value) => update("lastName", value)} /></div><div className="fieldGrid two"><TextField label="Phone" value={form.phone} onChange={(value) => update("phone", value)} placeholder="406-555-1234" type="tel" /><TextField label="Email" value={form.email} onChange={(value) => update("email", value)} placeholder="you@example.com" type="email" /></div><p className="fieldPrompt">How should Ben contact you?</p><ChoiceRow options={["Text", "Call", "Email"]} value={form.preferredContact} onChange={(value) => update("preferredContact", value)} /><label className="consentRow"><input type="checkbox" checked={form.consent} onChange={(event) => update("consent", event.target.checked)} /><span>I agree that Ben may contact me about this request. Message and data rates may apply.</span></label><p className="formHint">Your name and either a phone number or email are required.</p></>;
-}
-
-function ReviewStep({ title, entries, error, submitting, onBack, onSubmit, sms }) {
-  return <div className="flowStep reviewStep"><span className="sectionLabel">Review</span><h2>{title}</h2><p>Ben will receive the structured details below. No automated vehicle recommendation is being made.</p><div className="reviewList">{entries.map(([key, value]) => <div key={key}><span>{labels[key] || key}</span><strong>{String(value)}</strong></div>)}</div>{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={onBack}>Make changes</button><button type="button" className="button primary" disabled={submitting} onClick={onSubmit}>{submitting ? "Sending..." : "Send to Ben"}</button></div>{error && <a className="fallbackLink" href={sms}>Text the prepared summary instead</a>}</div>;
-}
-
-function StandardFlow({ flow, step, form, update, error, next, back, reviewEntries, reviewStep, submit, submitting, sms }) {
-  if (step === reviewStep) return <ReviewStep title="Check your request." entries={reviewEntries} error={error} submitting={submitting} onBack={back} onSubmit={submit} sms={sms} />;
-  if (flow === "trade") {
-    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Vehicle</span><h2>Which vehicle are you considering trading or selling?</h2><div className="fieldGrid three"><TextField label="Year" required value={form.tradeYear} onChange={(value) => update("tradeYear", value)} /><TextField label="Make" required value={form.tradeMake} onChange={(value) => update("tradeMake", value)} /><TextField label="Model" required value={form.tradeModel} onChange={(value) => update("tradeModel", value)} /></div><div className="fieldGrid two"><TextField label="Mileage" value={form.tradeMileage} onChange={(value) => update("tradeMileage", value)} /><TextField label="VIN, optional" value={form.tradeVin} onChange={(value) => update("tradeVin", value.toUpperCase())} /></div><p className="fieldPrompt">What are you considering?</p><ChoiceRow options={["Trade", "Sell", "Not sure"]} value={form.tradeAction} onChange={(value) => update("tradeAction", value)} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
-    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Details</span><h2>What should Ben know about it?</h2><div className="fieldGrid two"><TextArea label="Condition" value={form.tradeCondition} onChange={(value) => update("tradeCondition", value)} placeholder="Good, bad, recent work, damage, tires" /><TextField label="Payoff, if applicable" value={form.tradePayoff} onChange={(value) => update("tradePayoff", value)} /></div><TextArea label="What are you considering next?" value={form.replacementInterest} onChange={(value) => update("replacementInterest", value)} /><TextArea label="Additional notes" value={form.notes} onChange={(value) => update("notes", value)} /><p className="formHint">Photos can follow by text after Ben reviews the request.</p><div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
-    if (step === 3) return <div className="flowStep"><span className="sectionLabel">Trade / Sell · Contact</span><h2>How may Ben reach you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review request</button></div></div>;
-  }
-  if (flow === "ask") {
-    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Ask Ben · Question</span><h2>What can Ben help you figure out?</h2><SelectField label="Topic" value={form.questionTopic} onChange={(value) => update("questionTopic", value)} options={["Buying", "Trading", "Features", "Comparisons", "Ownership", "Troubleshooting", "Towing", "AWD / 4WD", "Trim levels", "Montana driving", "General automotive help"]} /><TextArea label="Your question" value={form.question} onChange={(value) => update("question", value)} placeholder="Ask the question in your own words" />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
-    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Ask Ben · Contact</span><h2>How may Ben answer you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review question</button></div></div>;
-  }
-  if (flow === "appointment") {
-    if (step === 1) return <div className="flowStep"><span className="sectionLabel">Appointment · Details</span><h2>What would you like to schedule?</h2><SelectField label="Reason" value={form.appointmentReason} onChange={(value) => update("appointmentReason", value)} options={["Vehicle shopping", "Test drive", "Trade appraisal", "Vehicle question", "Other"]} /><div className="fieldGrid two"><TextField label="Preferred date" type="date" value={form.appointmentDate} onChange={(value) => update("appointmentDate", value)} /><TextField label="Preferred time" type="time" value={form.appointmentTime} onChange={(value) => update("appointmentTime", value)} /></div><TextArea label="Anything Ben should know?" value={form.notes} onChange={(value) => update("notes", value)} /><div className="flowButtons"><span /><button type="button" className="button primary" onClick={next}>Continue</button></div></div>;
-    if (step === 2) return <div className="flowStep"><span className="sectionLabel">Appointment · Contact</span><h2>How may Ben confirm with you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={back}>Back</button><button type="button" className="button primary" onClick={next}>Review request</button></div></div>;
-  }
-  return null;
-}
-
-function FlowDrawer({ flow, initialStage, onClose }) {
-  const [step, setStep] = useState(flow === "discovery" && !initialStage ? 0 : 1);
-  const [form, setForm] = useState({ ...emptyForm, processStage: initialStage || "" });
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [complete, setComplete] = useState(false);
-  const flowTitle = { discovery: "Vehicle Discovery", trade: "Trade / Sell", ask: "Ask Ben", appointment: "Appointment Request" }[flow];
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-  const go = (nextStep) => { setError(""); setStep(nextStep); };
-  const validateContact = () => !form.firstName.trim() || !form.lastName.trim() ? "Please add your first and last name." : !form.phone.trim() && !form.email.trim() ? "Please add either a phone number or email." : !form.consent ? "Please confirm that Ben may contact you about this request." : "";
-
-  function discoveryNext() {
-    if (step === 1 && form.processStage === "I know exactly what I want" && (!form.vehicleYear || !form.vehicleMake || !form.vehicleModel)) { setError("Please add the year, make, and model so Ben knows what to verify."); return; }
-    if (step === 4) { const contactError = validateContact(); if (contactError) { setError(contactError); return; } }
-    go(step + 1);
-  }
-
-  function standardNext(reviewStep) {
-    const contactStep = flow === "trade" ? 3 : 2;
-    if (step === contactStep) { const contactError = validateContact(); if (contactError) { setError(contactError); return; } }
-    if (flow === "trade" && step === 1 && (!form.tradeYear || !form.tradeMake || !form.tradeModel)) { setError("Please add the year, make, and model of the vehicle."); return; }
-    if (flow === "ask" && step === 1 && !form.question.trim()) { setError("Please add the question you want Ben to answer."); return; }
-    go(Math.min(step + 1, reviewStep));
-  }
-
-  const reviewEntries = useMemo(() => reviewKeys[flow].map((key) => [key, form[key]]).filter(([, value]) => value !== "" && value !== null && value !== undefined), [form, flow]);
-
-  const smsMessage = useMemo(() => {
-    const lines = [`Hi Ben, I completed a ${flowTitle} request on BenSimple.co.`];
-    reviewEntries.forEach(([key, value]) => lines.push(`${labels[key] || key}: ${value}`));
-    return `sms:${PHONE}?&body=${encodeURIComponent(lines.join("\n"))}`;
-  }, [flowTitle, reviewEntries]);
-
-  async function sendLead() {
-    setSubmitting(true); setError("");
-    try { await submitLead({ ...form, intent: flowTitle, leadType: flow }); setComplete(true); }
-    catch { setError("That request did not save. You can still text Ben with the prepared summary below."); }
-    finally { setSubmitting(false); }
-  }
-
-  const reviewStep = flow === "trade" ? 4 : 3;
-  const progress = complete ? 1 : flow === "discovery" ? Math.max(step, 1) / 6 : Math.max(step, 1) / reviewStep;
-
-  return <div className="flowOverlay" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><aside className="flowDrawer" aria-label={flowTitle}><header className="flowHeader"><div><span>Ben LaVelle</span><small>Butte Auto · Butte, Montana</small></div><button type="button" onClick={onClose} aria-label="Close">×</button></header><div className="flowProgress"><span style={{ width: `${Math.min(progress * 100, 100)}%` }} /></div>
-    {complete ? <div className="flowStep successStep"><span className="sectionLabel">Request received</span><h2>Ben has the details.</h2>{flow === "discovery" ? <p className="handoffCopy">Okay, got it. I think I have a few options that could be a good fit, but I want Ben to verify that they’re still available and confirm the current details. I’ll have him reach out to you personally.</p> : <p>Ben will review your request and follow up personally using the contact method you selected.</p>}<div className="flowButtons"><a className="button primary" href={smsMessage}>Text the summary to Ben</a><button type="button" className="button secondary" onClick={onClose}>Close</button></div></div> : flow === "discovery" ? <>
-      {step === 0 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery</span><h2>Where are you in the process?</h2><p>Still browsing and test driving, looking for the perfect style or fit? Let’s walk through a few of the basics and narrow it down together.</p><div className="stageChoices">{["I know exactly what I want", "I have a few options in mind", "I’m still narrowing it down"].map((stage) => <button type="button" key={stage} onClick={() => { update("processStage", stage); go(1); }}><strong>{stage}</strong><span>{stage === "I know exactly what I want" ? "Year, make, model, trim, and details" : stage === "I have a few options in mind" ? "Compare the vehicles already on your list" : "Start with how you drive and what you need"}</span></button>)}</div></div>}
-      {step === 1 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Vehicle</span><h2>{form.processStage === "I know exactly what I want" ? "Which vehicle are you looking for?" : form.processStage === "I have a few options in mind" ? "What is already on your list?" : "What kind of vehicle are you considering?"}</h2>{form.processStage === "I know exactly what I want" && <><div className="fieldGrid three"><TextField label="Year" required value={form.vehicleYear} onChange={(value) => update("vehicleYear", value)} /><TextField label="Make" required value={form.vehicleMake} onChange={(value) => update("vehicleMake", value)} /><TextField label="Model" required value={form.vehicleModel} onChange={(value) => update("vehicleModel", value)} /></div><div className="fieldGrid two"><TextField label="Trim" value={form.vehicleTrim} onChange={(value) => update("vehicleTrim", value)} /><TextField label="Preferred color" value={form.preferredColor} onChange={(value) => update("preferredColor", value)} /></div><p className="fieldPrompt">New, used, or either?</p><ChoiceRow options={["New", "Used", "Either"]} value={form.vehicleCondition} onChange={(value) => update("vehicleCondition", value)} /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /></>}{form.processStage === "I have a few options in mind" && <><TextArea label="Vehicles or models already considered" value={form.modelsConsidered} onChange={(value) => update("modelsConsidered", value)} placeholder="List the vehicles already on your radar" /><div className="fieldGrid two"><TextArea label="What did you like?" value={form.liked} onChange={(value) => update("liked", value)} /><TextArea label="What did you not like?" value={form.disliked} onChange={(value) => update("disliked", value)} /></div><TextField label="Preferred body style" value={form.bodyStyle} onChange={(value) => update("bodyStyle", value)} placeholder="Truck, SUV, crossover, car" /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /><div className="fieldGrid three"><TextField label="Seating needs" value={form.seating} onChange={(value) => update("seating", value)} placeholder="5, 6 or more" /><SelectField label="Third row" value={form.thirdRow} onChange={(value) => update("thirdRow", value)} options={["No preference", "Required", "Nice to have", "Not needed"]} /><TextField label="Ground clearance" value={form.groundClearance} onChange={(value) => update("groundClearance", value)} placeholder="Standard, extra, unsure" /></div></>}{form.processStage === "I’m still narrowing it down" && <><p className="fieldPrompt">Start with a body style</p><ChoiceRow options={["Truck", "SUV", "Crossover", "Car", "Open to ideas"]} value={form.bodyStyle} onChange={(value) => update("bodyStyle", value)} /><p className="fieldPrompt">Drivetrain preference</p><ChoiceRow options={["AWD", "4x4", "2WD", "No preference"]} value={form.drivetrain} onChange={(value) => update("drivetrain", value)} /><div className="fieldGrid three"><TextField label="Seating needs" value={form.seating} onChange={(value) => update("seating", value)} placeholder="5, 6 or more" /><SelectField label="Third row" value={form.thirdRow} onChange={(value) => update("thirdRow", value)} options={["No preference", "Required", "Nice to have", "Not needed"]} /><TextField label="Ground clearance" value={form.groundClearance} onChange={(value) => update("groundClearance", value)} placeholder="Standard, extra, unsure" /></div></>} {error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(0)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
-      {step === 2 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Priorities</span><h2>How does the vehicle need to work for you?</h2>{form.processStage !== "I know exactly what I want" && <><div className="fieldGrid two"><TextField label="Safety priorities" value={form.safety} onChange={(value) => update("safety", value)} /><TextField label="Towing needs" value={form.towing} onChange={(value) => update("towing", value)} /></div><div className="fieldGrid two"><TextField label="Cargo needs" value={form.cargo} onChange={(value) => update("cargo", value)} /><TextField label="Fuel economy" value={form.fuelEconomy} onChange={(value) => update("fuelEconomy", value)} /></div><div className="fieldGrid two"><TextArea label="Commute and driving use" value={form.drivingUse} onChange={(value) => update("drivingUse", value)} /><TextArea label="Montana and winter driving needs" value={form.winterNeeds} onChange={(value) => update("winterNeeds", value)} /></div><div className="fieldGrid two"><TextField label="Preferred brands" value={form.preferredBrands} onChange={(value) => update("preferredBrands", value)} /><TextField label="Brands you do not want" value={form.avoidedBrands} onChange={(value) => update("avoidedBrands", value)} /></div></>}<div className="fieldGrid two"><TextArea label="Must-have features" value={form.mustHaves} onChange={(value) => update("mustHaves", value)} /><TextArea label="Deal-breakers" value={form.dealBreakers} onChange={(value) => update("dealBreakers", value)} /></div><div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(1)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
-      {step === 3 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Budget and timing</span><h2>What should Ben work around?</h2><p className="fieldPrompt">How are you thinking about the budget?</p><ChoiceRow options={["Total budget", "Monthly budget", "Still deciding"]} value={form.budgetMode} onChange={(value) => update("budgetMode", value)} /><TextField label="Budget amount or range" value={form.budgetDetails} onChange={(value) => update("budgetDetails", value)} placeholder="$35,000 total or about $650 per month" /><p className="fieldPrompt">Will there be a trade-in?</p><ChoiceRow options={["Yes", "No", "Maybe"]} value={form.tradeIn} onChange={(value) => update("tradeIn", value)} /><SelectField label="Purchase timeline" value={form.purchaseTimeline} onChange={(value) => update("purchaseTimeline", value)} options={["Just researching", "Within 30 days", "Within 60 to 90 days", "When the right vehicle appears", "As soon as possible"]} /><div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(2)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Continue</button></div></div>}
-      {step === 4 && <div className="flowStep"><span className="sectionLabel">Vehicle Discovery · Contact</span><h2>How may Ben reach you?</h2><ContactFields form={form} update={update} />{error && <p className="flowError">{error}</p>}<div className="flowButtons"><button type="button" className="button textOnly" onClick={() => go(3)}>Back</button><button type="button" className="button primary" onClick={discoveryNext}>Review request</button></div></div>}
-      {step === 5 && <ReviewStep title="Check your Vehicle Discovery request." entries={reviewEntries} error={error} submitting={submitting} onBack={() => go(4)} onSubmit={sendLead} sms={smsMessage} />}
-    </> : <StandardFlow flow={flow} step={step} form={form} update={update} error={error} next={() => standardNext(reviewStep)} back={() => go(step - 1)} reviewEntries={reviewEntries} reviewStep={reviewStep} submit={sendLead} submitting={submitting} sms={smsMessage} />}
-  </aside></div>;
-}
+const capabilityRows = [
+  ["01", "Find the right direction", "The conversation adapts to a specific vehicle, a short list, or a customer who is still narrowing things down."],
+  ["02", "Handle the trade", "VIN, mileage, condition, payoff, timing, and what the customer wants next, without pretending to provide a value."],
+  ["03", "Answer the car question", "Specifications, features, comparisons, ownership questions, and Montana driving needs, with verification when facts are uncertain."],
+  ["04", "Recognize buying intent", "When the customer is ready, the assistant stops over-qualifying and moves toward contact or an appointment request."],
+  ["05", "Give Ben the useful summary", "Buying timeframe, priorities, deal-breakers, trade, appointment status, and the recommended next action are organized for follow-up."]
+];
 
 export default function Home() {
-  const [activeFlow, setActiveFlow] = useState(null);
-  const [initialStage, setInitialStage] = useState("");
-  function openFlow(flow, stage = "") { setInitialStage(stage); setActiveFlow(flow); track("flow_opened", { flow, process_stage: stage || null }); }
   return <main>
-    <header className="siteHeader shell"><a className="wordmarkLink" href="#top" aria-label="BenSimple home"><BrandWordmark priority /></a><div className="headerIdentity"><strong>Ben LaVelle</strong><span>Butte Auto · Butte, Montana</span></div><nav><a href="#discovery">Vehicle Discovery</a><a href="#trade">Trade / Sell</a><a href="#ask">Ask Ben</a><a href="#helps">Ben Helps</a><a href="#contact">Contact</a><a className="inventoryLink" href={INVENTORY} target="_blank" rel="noreferrer">Browse Inventory</a></nav></header>
-    <section className="hero shell" id="top" aria-labelledby="heroTitle"><div className="heroRule" /><div className="heroCopy"><span className="heroKicker">Ben LaVelle · Butte, Montana</span><h1 id="heroTitle"><span>Cars don’t</span><span>have to be</span><span>complicated.</span></h1><p>Buying, trading, finding, or figuring one out?</p><div className="heroActions"><button className="button primary" onClick={() => openFlow("discovery")}>Start Vehicle Discovery</button><button className="button secondary" onClick={() => openFlow("ask")}>Ask Ben</button><a className="textLink" href={INVENTORY} target="_blank" rel="noreferrer">Browse Live Inventory</a></div></div><figure className="heroPortrait"><img src="/BEN_MASTER_PROFILE_APPROVED.png" alt="Approved BenSimple character artwork of Ben LaVelle" /><figcaption><strong>Ben LaVelle</strong><span>at Butte Auto</span></figcaption></figure></section>
-    <div className="marquee" aria-label="BenSimple brand message"><div><span>CARS DON’T HAVE TO BE COMPLICATED</span><i>•</i><span>BUY</span><i>•</i><span>TRADE</span><i>•</i><span>FIND</span><i>•</i><span>LEARN</span><i>•</i><span>ASK BEN</span><i>•</i><span>IT’S BENSIMPLE ALL ALONG</span><i>•</i><span aria-hidden="true">CARS DON’T HAVE TO BE COMPLICATED</span><i aria-hidden="true">•</i><span aria-hidden="true">BUY</span><i aria-hidden="true">•</i><span aria-hidden="true">TRADE</span><i aria-hidden="true">•</i><span aria-hidden="true">FIND</span><i aria-hidden="true">•</i><span aria-hidden="true">LEARN</span><i aria-hidden="true">•</i><span aria-hidden="true">ASK BEN</span><i aria-hidden="true">•</i><span aria-hidden="true">IT’S BENSIMPLE ALL ALONG</span></div></div>
-    <section className="routeIndex shell" aria-labelledby="routeTitle"><header><span className="sectionLabel">Start here</span><h2 id="routeTitle">What are you here to do?</h2></header><div className="routeList"><button onClick={() => openFlow("discovery")}><b>01</b><strong>Discover your next vehicle</strong><span>Know exactly what you want or start with the basics.</span></button><button onClick={() => openFlow("trade")}><b>02</b><strong>Trade or sell a vehicle</strong><span>Share the vehicle, mileage, condition, and payoff.</span></button><button onClick={() => openFlow("ask")}><b>03</b><strong>Ask Ben a vehicle question</strong><span>Buying, ownership, comparisons, or troubleshooting.</span></button><a href={INVENTORY} target="_blank" rel="noreferrer"><b>04</b><strong>Browse live inventory</strong><span>Open current listings at Butte Auto.</span></a></div></section>
-    <section className="discoverySection" id="discovery"><div className="discoveryCopy"><span className="sectionLabel">Vehicle Discovery</span><h2>Still browsing and test driving, looking for the perfect style or fit?</h2><p>Let’s walk through a few of the basics and narrow it down together.</p></div><div className="discoveryBranches"><p>Where are you in the process?</p>{["I know exactly what I want", "I have a few options in mind", "I’m still narrowing it down"].map((stage, index) => <button key={stage} onClick={() => openFlow("discovery", stage)}><b>0{index + 1}</b><strong>{stage}</strong><span>{index === 0 ? "Year, make, model, trim, and details" : index === 1 ? "Compare what is already on your list" : "Start with how you drive and what you need"}</span></button>)}</div></section>
-    <section className="brandAccess shell"><div><span className="sectionLabel">Brand access through Butte Auto</span><h2>Eight new-vehicle brands.<br />Used vehicles from every brand.</h2><p>BenSimple is the brand. Butte Auto is the dealership affiliation, live inventory source, and transaction platform.</p></div><ol>{["RAM", "Dodge", "Chrysler", "Jeep", "Chevrolet", "GMC", "Toyota", "Subaru"].map((brand, index) => <li key={brand}><strong>{brand}</strong><span>0{index + 1}</span></li>)}<li className="used"><strong>Used vehicles</strong><span>Any brand</span></li></ol></section>
-    <section className="inventorySection"><div><span className="sectionLabel">Live inventory</span><h2>Browse Live Inventory at Butte Auto</h2><p>Inventory changes daily. For the most accurate pricing, availability, and vehicle details, browse Butte Auto’s live inventory or contact Ben directly.</p></div><nav><a href={NEW_INVENTORY} target="_blank" rel="noreferrer"><strong>Shop New Inventory</strong><span>Official live listings</span></a><a href={USED_INVENTORY} target="_blank" rel="noreferrer"><strong>Shop Used Inventory</strong><span>Official live listings</span></a><a href={INVENTORY} target="_blank" rel="noreferrer"><strong>Browse Everything</strong><span>New and used</span></a></nav></section>
-    <section className="tradeSection shell" id="trade"><div><span className="sectionLabel">Trade / Sell</span><h2>Thinking about trading or selling your vehicle?</h2></div><div><p>Start with the vehicle, mileage, condition, and payoff. Add what you are considering next if you already know.</p><ul><li>Trade or sell</li><li>VIN optional</li><li>Preferred contact method</li><li>Photos can follow by text</li></ul><button className="button primary" onClick={() => openFlow("trade")}>Start Trade Request</button></div></section>
-    <section className="askSection" id="ask"><span className="sectionLabel">Ask Ben</span><h2>Have a vehicle question?<br />Ask Ben.</h2><div><p>Buying, trading, features, comparisons, ownership, troubleshooting, towing, AWD, 4WD, trims, model differences, or Montana driving needs.</p><button className="button dark" onClick={() => openFlow("ask")}>Send a Question</button></div></section>
-    <section className="helpsSection shell" id="helps"><header><span className="sectionLabel">Ben Helps</span><h2>Useful automotive answers.</h2><p>Choose a topic to start a question.</p></header><div>{[["AWD vs 4WD", "Montana traction and use"], ["Trade value", "Condition, mileage, payoff, and timing"], ["New vs used", "Compare the practical differences"], ["Towing and payload", "Match the vehicle to the job"], ["Trim levels and features", "What changes and what matters"], ["Montana winter driving", "Tires, clearance, traction, and preparation"]].map(([topic, note]) => <button key={topic} onClick={() => openFlow("ask")}><strong>{topic}</strong><span>{note}</span></button>)}</div></section>
-    <figure className="masterBanner"><img src="/BEN_MASTER_BANNER_APPROVED.jpg" alt="Approved BenSimple and Butte Auto banner" /></figure>
-    <section className="contactSection shell" id="contact"><div><span className="sectionLabel">Contact / Appointments</span><h2>Ben LaVelle</h2><p>Butte, Montana</p></div><div className="contactDirect"><a className="phone" href={`tel:${PHONE}`}>{DISPLAY_PHONE}</a><a href={`mailto:${EMAIL}`}>{EMAIL}</a><div><a className="button primary" href={`sms:${PHONE}`}>Text Ben</a><a className="button secondary" href={`tel:${PHONE}`}>Call Ben</a><button className="button secondary" onClick={() => openFlow("appointment")}>Request an Appointment</button></div></div></section>
-    <footer className="siteFooter shell"><a className="wordmarkLink footerWordmark" href="#top" aria-label="BenSimple home"><BrandWordmark /></a><p>Ben LaVelle · Butte Auto · Butte, Montana</p><nav><a href="/specials">Specials</a><a href="/legal">Privacy</a><a href={FACEBOOK} target="_blank" rel="noreferrer">Facebook</a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a></nav><small>BenSimple is Ben LaVelle’s personal automotive brand. Butte Auto is the dealership affiliation and official inventory source.</small></footer>
-    {activeFlow && <FlowDrawer key={`${activeFlow}-${initialStage}`} flow={activeFlow} initialStage={initialStage} onClose={() => setActiveFlow(null)} />}
+    <header className="siteHeader shell">
+      <a className="wordmarkLink" href="#top" aria-label="BenSimple home"><BrandWordmark priority /></a>
+      <div className="headerIdentity"><strong>Ben LaVelle</strong><span>Butte Auto · Butte, Montana</span></div>
+      <nav aria-label="Main navigation">
+        <a href="#bensimple-ai">BenSimple AI</a>
+        <a href="#vehicle-data">VIN + Recalls</a>
+        <a href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a>
+        <a href="#contact">Talk to Ben</a>
+      </nav>
+      <a className="mobileCall" href={`tel:${PHONE}`} aria-label={`Call Ben at ${DISPLAY_PHONE}`}>Call Ben</a>
+    </header>
+
+    <section className="aiHero shell" id="top" aria-labelledby="heroTitle">
+      <div className="aiHeroCopy">
+        <span className="heroKicker">BenSimple Automotive BDC · Butte, Montana</span>
+        <h1 id="heroTitle"><span>A smarter first</span><span>conversation.</span></h1>
+        <p>Ask a car question, find the right vehicle, decode a VIN, check recalls, work through a trade, or request time with Ben.</p>
+        <div className="heroActions">
+          <a className="button primary" href="#bensimple-ai">Start With Ben</a>
+          <a className="button secondary" href={INVENTORY} target="_blank" rel="noreferrer">Browse Inventory</a>
+        </div>
+        <small>Cars don’t have to be complicated.</small>
+      </div>
+      <figure className="aiHeroPortrait">
+        <img src="/BEN_MASTER_PROFILE_APPROVED.png" alt="Approved BenSimple character artwork of Ben LaVelle" />
+        <figcaption><strong>BEN LAVELLE</strong><span>BUTTE AUTO</span></figcaption>
+      </figure>
+    </section>
+
+    <div className="signalBand" aria-label="BenSimple assistant capabilities">
+      <span>FIND A VEHICLE</span><i>•</i><span>TRADE / SELL</span><i>•</i><span>ASK BEN</span><i>•</i><span>VIN DECODE</span><i>•</i><span>NHTSA RECALLS</span><i>•</i><span>APPOINTMENT REQUESTS</span>
+    </div>
+
+    <BdcAgent />
+
+    <section className="capabilitySection shell" aria-labelledby="capabilityTitle">
+      <header><span className="sectionLabel">What the assistant does</span><h2 id="capabilityTitle">Useful first.<br />Sales-aware second.</h2><p>The goal is not maximum data. It is the best next action for the customer and for Ben.</p></header>
+      <div className="capabilityRows">{capabilityRows.map(([number, title, copy]) => <article key={number}><b>{number}</b><h3>{title}</h3><p>{copy}</p></article>)}</div>
+    </section>
+
+    <section className="vehicleDataSection" id="vehicle-data" aria-labelledby="vehicleDataTitle">
+      <div className="vehicleDataArt"><span>NHTSA</span><strong>OFFICIAL DATA</strong><small>VIN · YEAR · MAKE · MODEL · RECALLS</small></div>
+      <div className="vehicleDataCopy">
+        <span className="sectionLabel">Vehicle data tools</span>
+        <h2 id="vehicleDataTitle">Decode the vehicle.<br />Explain what matters.</h2>
+        <p>BenSimple AI uses official NHTSA vPIC data for VIN decoding and year, make, and model support. Recall results are attributed to NHTSA and presented without dumping raw API data.</p>
+        <ul><li>VIN details stay readable</li><li>Recall records include affected components and remedies when available</li><li>External API failures never block the conversation</li></ul>
+        <a className="textLink" href="#bensimple-ai">Start a VIN or recall conversation</a>
+      </div>
+    </section>
+
+    <section className="inventoryPolicy shell" aria-labelledby="inventoryTitle">
+      <div><span className="sectionLabel">Butte Auto inventory</span><h2 id="inventoryTitle">Official listings.<br />Personal verification.</h2></div>
+      <div>
+        <p>The assistant can help narrow the search and reference Butte Auto as the official inventory source. Ben confirms availability and the current details before recommending a vehicle.</p>
+        <div className="policyRules"><span>NO DEALERSHIP PRICES</span><span>NO AVAILABILITY PROMISES</span><span>NO PAYMENT QUOTES</span></div>
+        <a className="button primary" href={INVENTORY} target="_blank" rel="noreferrer">Open Butte Auto Inventory</a>
+      </div>
+    </section>
+
+    <section className="contactSection shell" id="contact">
+      <div className="contactIntro"><span className="sectionLabel">Talk to Ben</span><h2>When it needs a person, it reaches a person.</h2><p>Ben reviews the conversation summary, verifies the vehicle information, and confirms appointment requests personally.</p><a className="contactPhone" href={`tel:${PHONE}`}>{DISPLAY_PHONE}</a><a href={`mailto:${EMAIL}`}>{EMAIL}</a></div>
+      <QuickLeadForm />
+    </section>
+
+    <footer className="siteFooter shell">
+      <a className="wordmarkLink footerWordmark" href="#top" aria-label="BenSimple home"><BrandWordmark /></a>
+      <p>Ben LaVelle · Butte Auto · Butte, Montana</p>
+      <nav><a href="/legal">Privacy</a><a href={FACEBOOK} target="_blank" rel="noreferrer">Facebook</a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a><a href={INVENTORY} target="_blank" rel="noreferrer">Butte Auto Inventory</a></nav>
+      <small>BenSimple is Ben LaVelle’s personal automotive brand. Butte Auto is the dealership affiliation and official inventory source.</small>
+    </footer>
   </main>;
 }

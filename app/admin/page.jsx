@@ -72,7 +72,7 @@ export default function AdminPage() {
   const stats = useMemo(() => {
     const uniqueSessions = new Set(events.map(e => e.session_id).filter(Boolean)).size;
     const leadCount = leads.length;
-    const appointments = leads.filter(l => l.status === "appointment").length;
+    const appointments = leads.filter(l => ["appointment_requested", "appointment_confirmed"].includes(l.status)).length;
     const sold = leads.filter(l => l.status === "sold").length;
     const sourceMap = {};
     for (const l of leads) {
@@ -121,7 +121,7 @@ export default function AdminPage() {
       <header className="adminTop">
         <div>
           <a className="wordmarkLink" href="/" aria-label="BenSimple home"><BrandWordmark /></a>
-          <span>Lead & conversion dashboard</span>
+          <span>BenSimple AI BDC pipeline</span>
         </div>
         <div className="adminTopActions">
           <button onClick={loadData}>Refresh</button>
@@ -154,16 +154,20 @@ export default function AdminPage() {
                     {l.phone && <a href={`tel:${l.phone}`}>{l.phone}</a>}
                     {l.email && <a href={`mailto:${l.email}`}>{l.email}</a>}
                   </td>
-                  <td>{l.need || "Not provided"}{l.note && <small>{l.note}</small>}</td>
+                  <td>{l.need || "Not provided"}{l.metadata?.lead_temperature && <small>{l.metadata.lead_temperature} · {l.metadata.buying_timeframe || "Timing not established"}</small>}{l.metadata?.next_action && <small>Next: {l.metadata.next_action}</small>}{l.note && <small>{l.note}</small>}</td>
                   <td>{l.vehicle || "Not provided"}{l.trade && <small>Trade: {l.trade}</small>}</td>
                   <td>{l.utm_source || l.source || "direct"}{l.utm_campaign && <small>{l.utm_campaign}</small>}</td>
                   <td>
                     <select value={l.status} onChange={(e)=>updateStatus(l.id,e.target.value)}>
-                      <option value="new">New</option>
-                      <option value="contacted">Contacted</option>
-                      <option value="appointment">Appointment</option>
-                      <option value="sold">Sold</option>
-                      <option value="closed">Closed</option>
+                      <option value="new">New Lead</option>
+                      <option value="needs_contact">Needs Contact</option>
+                      <option value="appointment_requested">Appointment Requested</option>
+                      <option value="appointment_confirmed">Appointment Confirmed</option>
+                      <option value="follow_up_today">Follow Up Today</option>
+                      <option value="future_follow_up">Future Follow Up</option>
+                      <option value="long_term">Long-Term</option>
+                      <option value="sold">Closed / Sold</option>
+                      <option value="lost">Lost</option>
                     </select>
                   </td>
                 </tr>

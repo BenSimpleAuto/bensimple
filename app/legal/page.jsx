@@ -55,7 +55,10 @@ export default function LegalPage() {
 
         <h2>Lead information and privacy</h2>
         <p>
-          When you voluntarily send information through BenSimple.co, text, email, or a future website form, it may be used to respond to your request, help locate or compare vehicles, follow up about a trade, schedule an appointment, or assist with a vehicle question. BenSimple does not sell customer contact information to third-party advertisers.
+          When you voluntarily send information through BenSimple.co, the BenSimple assistant, text, email, or a website form, it may be used to respond to your request, help locate or compare vehicles, follow up about a trade, request an appointment, or assist with a vehicle question. Conversation messages and a structured summary may be saved so Ben can follow up without making you repeat everything. An appointment request is not confirmed until Ben confirms it personally. BenSimple does not sell customer contact information to third-party advertisers.
+        </p>
+        <p>
+          For VIN decoding and recall help, the site may send a VIN or the vehicle year, make, and model to official National Highway Traffic Safety Administration services. NHTSA results are informational. Confirm open VIN-specific recalls and remedy status through NHTSA or an authorized dealer.
         </p>
         <p>
           Do not submit Social Security numbers, banking credentials, passwords, full payment-card information, or other highly sensitive financial information through a general website contact form or ordinary text message.
