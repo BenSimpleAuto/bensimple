@@ -5,14 +5,14 @@
 1. The customer starts with natural language or a short intent starter.
 2. `POST /api/bdc` sanitizes the recent conversation and derives a structured qualification snapshot.
 3. VIN and recall requests call official NHTSA services from the server.
-4. When Vercel AI Gateway is configured, the BenSimple BDC agent creates the customer-facing reply. Otherwise, a deterministic guided response keeps the experience usable.
+4. When `AI_GATEWAY_MODEL` and either Vercel OIDC or an AI Gateway API key are available, the BenSimple BDC agent creates the customer-facing reply. Otherwise, a deterministic guided response keeps the experience usable.
 5. A response guard checks the final message for prohibited dealership price, availability, financing, trade-value, and appointment claims.
 6. A lead is not stored until the customer provides a phone number or email and explicitly clicks `Send This to Ben` or submits the quick form with consent.
 7. `POST /api/leads` repeats qualification on the server and writes the lead and conversation summary to Supabase.
 
 ## Server boundaries
 
-- AI provider and Supabase secret credentials stay in server environment variables.
+- AI provider and Supabase secret credentials stay in server environment variables. Vercel deployments may use the automatic `VERCEL_OIDC_TOKEN` instead of a manually managed Gateway key.
 - The browser receives only the assistant reply, structured qualification safe for the customer interface, NHTSA results, and handoff status.
 - The browser never receives a service-role or Supabase secret key.
 - The admin dashboard uses Supabase Auth and the publishable browser key. Database row-level security must remain enabled for exposed tables.

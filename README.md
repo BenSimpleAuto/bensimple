@@ -41,7 +41,7 @@ Automotive development is on the `automotive-2026` branch. Run `pnpm dev` for lo
 
 ## AI and lead system
 
-The server-side assistant route is `app/api/bdc/route.js`. It uses Vercel AI Gateway when both `AI_GATEWAY_API_KEY` and `BENSIMPLE_AI_MODEL` are configured. If either is missing or the model request fails, the same interface uses a deterministic guided fallback. No provider credential is sent to the browser.
+The server-side assistant route is `app/api/bdc/route.js`. Set `AI_GATEWAY_MODEL` to a current `provider/model` ID. Vercel deployments authenticate with their automatic OIDC token; local or non-Vercel environments can use `AI_GATEWAY_API_KEY`. If Gateway authentication or the model is unavailable, the same interface uses a deterministic guided fallback. No provider credential is sent to the browser.
 
 NHTSA vPIC powers VIN decoding and year/make/model support. NHTSA recall results are model-level records, even when a VIN is first decoded to identify the vehicle. Customers are told to confirm open VIN-specific recalls and remedy status through NHTSA or an authorized dealer.
 
@@ -61,7 +61,7 @@ Do not deploy production until all of these are confirmed:
 
 - final transparent wordmark is present
 - Supabase lead insert succeeds under the current row-level security policy
-- Vercel AI Gateway key and model are configured for model-powered answers
+- a current Vercel AI Gateway model is configured and OIDC or an API key is available
 - the Vercel project is linked to `BenSimpleAuto/bensimple`
 - the desired production branch is explicitly selected
 - responsive and end-to-end preview checks pass

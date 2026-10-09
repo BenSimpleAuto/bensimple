@@ -52,8 +52,8 @@ export async function POST(request) {
     const qualification = qualifyConversation(messages);
     const nhtsa = await getNhtsaContext(qualification);
     qualification.summary = buildBdcSummary(qualification);
-    const model = process.env.BENSIMPLE_AI_MODEL;
-    const gatewayReady = Boolean(process.env.AI_GATEWAY_API_KEY && model);
+    const model = process.env.AI_GATEWAY_MODEL || process.env.BENSIMPLE_AI_MODEL;
+    const gatewayReady = Boolean(model && (process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN));
     let responseText;
     let mode = "guided-fallback";
 
