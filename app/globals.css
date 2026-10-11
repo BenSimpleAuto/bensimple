@@ -301,6 +301,7 @@ h1, h2, h3 { text-wrap: balance; }
   .agentMessage { max-width: 94%; }
   .agentMessage p { font-size: 1rem; }
   .agentComposer { grid-template-columns: 1fr 70px; }
+  .agentComposer button { width: 70px; }
   .agentHandoff { grid-template-columns: 1fr; }
   .agentHandoff button { width: 100%; }
   .capabilitySection, .inventoryPolicy, .contactSection, .reviewSection { padding-block: 80px; gap: 46px; }
