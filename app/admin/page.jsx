@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { LEAD_STATUSES } from "../../lib/leadStatuses";
 import BrandWordmark from "../components/BrandWordmark";
 
 const ADMIN_EMAIL = "ben@bensimple.co";
@@ -18,12 +19,12 @@ function Metric({label,value,sub}) {
 
 export default function AdminPage() {
   const [session, setSession] = useState(null);
-  const [email, setEmail] = useState(ADMIN_EMAIL);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState("");
   const [leads, setLeads] = useState([]);
   const [events, setEvents] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({data}) => {
@@ -46,8 +47,8 @@ export default function AdminPage() {
     setSending(true);
     setNotice("");
     const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/admin` }
+      email: ADMIN_EMAIL,
+      options: { emailRedirectTo: `${window.location.origin}/admin`, shouldCreateUser: false }
     });
     setNotice(error ? error.message : "Check your email for the secure sign-in link.");
     setSending(false);
@@ -55,18 +56,43 @@ export default function AdminPage() {
 
   async function loadData() {
     setLoading(true);
-    const [{data: leadRows},{data: eventRows}] = await Promise.all([
+    setNotice("");
+    const [leadResult, eventResult, reviewResult] = await Promise.all([
       supabase.from("auto_leads").select("*").order("created_at",{ascending:false}).limit(200),
-      supabase.from("auto_events").select("*").order("created_at",{ascending:false}).limit(1000)
+      supabase.from("auto_events").select("*").order("created_at",{ascending:false}).limit(1000),
+      supabase.from("customer_reviews").select("*").order("created_at",{ascending:false}).limit(200)
     ]);
-    setLeads(leadRows || []);
-    setEvents(eventRows || []);
+    const error = leadResult.error || eventResult.error || reviewResult.error;
+    if (error) setNotice("Dashboard data could not be loaded. Check the database access policies.");
+    setLeads(leadResult.data || []);
+    setEvents(eventResult.data || []);
+    setReviews(reviewResult.data || []);
     setLoading(false);
   }
 
   async function updateStatus(id,status) {
-    await supabase.from("auto_leads").update({status}).eq("id",id);
+    setNotice("");
+    const { error } = await supabase.from("auto_leads").update({status}).eq("id",id);
+    if (error) {
+      setNotice("Lead status did not save.");
+      return;
+    }
     setLeads((rows) => rows.map((r) => r.id === id ? {...r,status} : r));
+  }
+
+  async function updateReviewStatus(id, status) {
+    setNotice("");
+    const update = {
+      status,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: session.user.id
+    };
+    const { error } = await supabase.from("customer_reviews").update(update).eq("id", id);
+    if (error) {
+      setNotice("Review decision did not save.");
+      return;
+    }
+    setReviews((rows) => rows.map((review) => review.id === id ? { ...review, ...update } : review));
   }
 
   const stats = useMemo(() => {
@@ -80,8 +106,9 @@ export default function AdminPage() {
       sourceMap[key] = (sourceMap[key] || 0) + 1;
     }
     const sources = Object.entries(sourceMap).sort((a,b)=>b[1]-a[1]);
-    return {uniqueSessions,leadCount,appointments,sold,sources};
-  }, [leads,events]);
+    const pendingReviews = reviews.filter((review) => review.status === "pending").length;
+    return {uniqueSessions,leadCount,appointments,sold,sources,pendingReviews};
+  }, [leads,events,reviews]);
 
   if (loading && !session) {
     return <main className="adminPage"><div className="adminAuth"><h1>Loading dashboard.</h1></div></main>;
@@ -96,7 +123,7 @@ export default function AdminPage() {
           <h1>Sign in to your sales dashboard.</h1>
           <p>This dashboard is restricted to {ADMIN_EMAIL}.</p>
           <form onSubmit={sendMagicLink}>
-            <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+            <input type="email" value={ADMIN_EMAIL} readOnly aria-label="Authorized admin email" />
             <button className="pill primary" disabled={sending}>{sending ? "Sending…" : "Email me a sign-in link"}</button>
           </form>
           {notice && <div className="adminNotice">{notice}</div>}
@@ -134,7 +161,9 @@ export default function AdminPage() {
         <Metric label="Leads" value={stats.leadCount} sub={stats.uniqueSessions ? `${((stats.leadCount/stats.uniqueSessions)*100).toFixed(1)}% visitor → lead` : "Waiting for traffic"} />
         <Metric label="Appointments" value={stats.appointments} />
         <Metric label="Sold" value={stats.sold} />
+        <Metric label="Reviews to approve" value={stats.pendingReviews} />
       </section>
+      {notice && <div className="adminNotice dashboardNotice" role="status">{notice}</div>}
 
       <section className="adminPanel">
         <div className="adminPanelHead">
@@ -158,22 +187,39 @@ export default function AdminPage() {
                   <td>{l.vehicle || "Not provided"}{l.trade && <small>Trade: {l.trade}</small>}</td>
                   <td>{l.utm_source || l.source || "direct"}{l.utm_campaign && <small>{l.utm_campaign}</small>}</td>
                   <td>
-                    <select value={l.status} onChange={(e)=>updateStatus(l.id,e.target.value)}>
-                      <option value="new">New Lead</option>
-                      <option value="needs_contact">Needs Contact</option>
-                      <option value="appointment_requested">Appointment Requested</option>
-                      <option value="appointment_confirmed">Appointment Confirmed</option>
-                      <option value="follow_up_today">Follow Up Today</option>
-                      <option value="future_follow_up">Future Follow Up</option>
-                      <option value="long_term">Long-Term</option>
-                      <option value="sold">Closed / Sold</option>
-                      <option value="lost">Lost</option>
-                    </select>
+                    <select value={l.status} onChange={(e)=>updateStatus(l.id,e.target.value)}>{LEAD_STATUSES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </td>
                 </tr>
               )) : <tr><td colSpan="6" className="emptyCell">No website leads yet.</td></tr>}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="adminPanel">
+        <div className="adminPanelHead">
+          <div><span className="eyebrow"><i /> PRIVATE REVIEW QUEUE</span><h2>Customer submissions</h2></div>
+          <span>{stats.pendingReviews} awaiting review</span>
+        </div>
+        <div className="reviewQueue">
+          {reviews.length ? reviews.map((review) => <article className="reviewQueueItem" key={review.id}>
+            <div className="reviewQueueMeta">
+              <span>{new Date(review.created_at).toLocaleString()}</span>
+              <strong>{review.rating}/5 · {review.status}</strong>
+            </div>
+            <blockquote>“{review.review_text}”</blockquote>
+            <div className="reviewQueueDetails">
+              <span>Submitted by: {review.name}</span>
+              <a href={`mailto:${review.email}`}>{review.email}</a>
+              <span>Display as: {review.display_name}</span>
+              {review.vehicle && <span>Vehicle: {review.vehicle}</span>}
+              <span>Publishing permission: {review.permission_to_publish ? "Yes" : "No"}</span>
+            </div>
+            <div className="reviewQueueActions">
+              <button type="button" className={review.status === "approved" ? "active" : ""} onClick={() => updateReviewStatus(review.id, "approved")}>Approve</button>
+              <button type="button" className={review.status === "rejected" ? "active" : ""} onClick={() => updateReviewStatus(review.id, "rejected")}>Reject</button>
+            </div>
+          </article>) : <p className="emptyCell">No customer review submissions yet.</p>}
         </div>
       </section>
 

@@ -80,6 +80,7 @@ export default function BdcAgent() {
   const [qualification, setQualification] = useState(null);
   const [nhtsa, setNhtsa] = useState({});
   const [handoffSent, setHandoffSent] = useState(false);
+  const [handoffConsent, setHandoffConsent] = useState(false);
   const transcriptRef = useRef(null);
   const [sessionId] = useState(getSessionId);
 
@@ -125,6 +126,10 @@ export default function BdcAgent() {
 
   async function sendToBen() {
     if (!qualification?.handoffReady || handoffSent) return;
+    if (!handoffConsent) {
+      setNotice("Please confirm that Ben may contact you about this request.");
+      return;
+    }
     setBusy(true);
     setNotice("");
     try {
@@ -176,8 +181,8 @@ export default function BdcAgent() {
       </div>
       {qualification?.handoffReady && <div className="agentHandoff">
         <div><span>{qualification.appointment ? "APPOINTMENT REQUEST" : "READY FOR BEN"}</span><strong>{qualification.nextAction}</strong></div>
-        <button type="button" onClick={sendToBen} disabled={busy || handoffSent}>{handoffSent ? "Sent to Ben" : "Send This to Ben"}</button>
-        <small>By sending, you agree that Ben may contact you about this request.</small>
+        <button type="button" onClick={sendToBen} disabled={busy || handoffSent || !handoffConsent}>{handoffSent ? "Sent to Ben" : "Send This to Ben"}</button>
+        <label className="agentConsent"><input type="checkbox" checked={handoffConsent} onChange={(event) => setHandoffConsent(event.target.checked)} /><span>Ben may contact me about this request.</span></label>
       </div>}
       {notice && <p className="agentNotice">{notice}</p>}
       <form className="agentComposer" onSubmit={(event) => { event.preventDefault(); sendMessage(); }}>

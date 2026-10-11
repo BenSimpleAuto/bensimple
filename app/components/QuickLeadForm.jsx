@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { track } from "../../lib/track";
 
-const empty = { name: "", phone: "", email: "", need: "Vehicle Help", message: "", preferredContact: "Text", consent: false };
+const empty = { name: "", phone: "", email: "", need: "Vehicle Help", message: "", preferredContact: "Text", consent: false, website: "" };
 
 function sessionId() {
   if (typeof window === "undefined") return "";
@@ -34,7 +34,7 @@ export default function QuickLeadForm() {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: sid, lead: form, consent: form.consent })
+        body: JSON.stringify({ sessionId: sid, lead: form, consent: form.consent, website: form.website })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -50,17 +50,18 @@ export default function QuickLeadForm() {
 
   return <form className="quickLead" onSubmit={submit}>
     <div className="quickLeadTitle"><span className="sectionLabel">No chat needed</span><h3>Send Ben a quick note.</h3></div>
-    <label><span>Name</span><input value={form.name} onChange={(event) => update("name", event.target.value)} /></label>
+    <label><span>Name</span><input required autoComplete="name" value={form.name} onChange={(event) => update("name", event.target.value)} /></label>
     <div className="quickLeadSplit">
-      <label><span>Phone</span><input type="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} /></label>
-      <label><span>Email</span><input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} /></label>
+      <label><span>Phone</span><input type="tel" autoComplete="tel" value={form.phone} onChange={(event) => update("phone", event.target.value)} /></label>
+      <label><span>Email</span><input type="email" autoComplete="email" value={form.email} onChange={(event) => update("email", event.target.value)} /></label>
     </div>
     <label><span>What Can Ben Help With?</span><select value={form.need} onChange={(event) => update("need", event.target.value)}><option>Vehicle Help</option><option>Trade / Sell</option><option>Automotive Question</option><option>Appointment Request</option></select></label>
     <label><span>Message</span><textarea rows="4" value={form.message} onChange={(event) => update("message", event.target.value)} /></label>
     <fieldset><legend>Preferred Contact Method</legend>{["Text", "Call", "Email"].map((method) => <button className={form.preferredContact === method ? "active" : ""} type="button" key={method} onClick={() => update("preferredContact", method)}>{method}</button>)}</fieldset>
     <label className="quickConsent"><input type="checkbox" checked={form.consent} onChange={(event) => update("consent", event.target.checked)} /><span>Ben may contact me about this request.</span></label>
+    <label className="websiteField" aria-hidden="true"><span>Website</span><input tabIndex="-1" autoComplete="off" value={form.website} onChange={(event) => update("website", event.target.value)} /></label>
     <button className="button primary" type="submit" disabled={sending}>{sending ? "Sending…" : "Send to Ben"}</button>
-    {status && <p className="quickStatus">{status}</p>}
+    {status && <p className="quickStatus" role="status" aria-live="polite">{status}</p>}
   </form>;
 }
 

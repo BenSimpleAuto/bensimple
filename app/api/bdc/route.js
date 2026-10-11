@@ -1,8 +1,8 @@
-import { createBdcAgent } from "../../../lib/bdc/agent";
-import { guidedResponse } from "../../../lib/bdc/fallback";
-import { enforceCustomerRules } from "../../../lib/bdc/guardrails";
-import { buildBdcSummary, qualifyConversation } from "../../../lib/bdc/qualify";
-import { decodeVin, getRecalls } from "../../../lib/nhtsa";
+import { createBdcAgent } from "../../../lib/bdc/agent.js";
+import { guidedResponse } from "../../../lib/bdc/fallback.js";
+import { enforceCustomerRules } from "../../../lib/bdc/guardrails.js";
+import { buildBdcSummary, qualifyConversation } from "../../../lib/bdc/qualify.js";
+import { decodeVin, getRecalls } from "../../../lib/nhtsa.js";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -18,27 +18,40 @@ function sanitizeMessages(input) {
 
 async function getNhtsaContext(qualification) {
   const context = {};
+  const action = qualification.currentIntent;
+  if (!["VIN Assistance", "Recall Check"].includes(action)) return context;
+
+  let recallVehicle = qualification.vehicle;
   if (qualification.vin) {
     try {
       context.vin = await decodeVin(qualification.vin);
-      qualification.vehicle = {
+      recallVehicle = {
         year: context.vin.year || qualification.vehicle.year,
         make: context.vin.make || qualification.vehicle.make,
         model: context.vin.model || qualification.vehicle.model,
         type: context.vin.vehicleType || qualification.vehicle.type
       };
+      context.vehicle = recallVehicle;
     } catch (error) {
       context.vinError = error.message;
     }
   }
-  if (qualification.intent === "Recall Check" && qualification.vehicle?.year && qualification.vehicle?.make && qualification.vehicle?.model) {
+  if (action === "Recall Check" && recallVehicle?.year && recallVehicle?.make && recallVehicle?.model) {
     try {
-      context.recalls = await getRecalls(qualification.vehicle);
+      context.recalls = await getRecalls(recallVehicle);
     } catch (error) {
       context.recallError = error.message;
     }
   }
   return context;
+}
+
+function logGatewayFailure(error) {
+  console.error("[BenSimple BDC] AI Gateway request failed", {
+    name: error?.name || "Error",
+    status: error?.statusCode || error?.status || null,
+    message: String(error?.message || "Unknown AI Gateway error").slice(0, 500)
+  });
 }
 
 export async function POST(request) {
@@ -53,7 +66,7 @@ export async function POST(request) {
     const nhtsa = await getNhtsaContext(qualification);
     qualification.summary = buildBdcSummary(qualification);
     const model = process.env.AI_GATEWAY_MODEL || process.env.BENSIMPLE_AI_MODEL;
-    const gatewayReady = Boolean(model && (process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN));
+    const gatewayReady = process.env.BENSIMPLE_AI_GATEWAY_ENABLED === "true" && Boolean(model);
     let responseText;
     let mode = "guided-fallback";
 
@@ -63,7 +76,8 @@ export async function POST(request) {
         const result = await agent.generate({ messages });
         responseText = result.text;
         mode = "ai-gateway";
-      } catch {
+      } catch (error) {
+        logGatewayFailure(error);
         responseText = guidedResponse(qualification, nhtsa);
       }
     } else {

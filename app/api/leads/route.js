@@ -1,5 +1,5 @@
-import { buildBdcSummary, qualifyConversation } from "../../../lib/bdc/qualify";
-import { storeBdcLead } from "../../../lib/bdc/storage";
+import { buildBdcSummary, qualifyConversation } from "../../../lib/bdc/qualify.js";
+import { storeBdcLead } from "../../../lib/bdc/storage.js";
 
 export const runtime = "nodejs";
 
@@ -15,15 +15,30 @@ function sanitizeMessages(messages) {
     .filter((message) => message.content);
 }
 
+function sanitizeAttribution(attribution) {
+  return {
+    pagePath: clean(attribution?.pagePath, 300) || "/",
+    referrer: clean(attribution?.referrer, 600) || null,
+    source: clean(attribution?.source, 120) || null,
+    utmSource: clean(attribution?.utmSource, 120) || null,
+    utmMedium: clean(attribution?.utmMedium, 120) || null,
+    utmCampaign: clean(attribution?.utmCampaign, 180) || null,
+    utmContent: clean(attribution?.utmContent, 180) || null
+  };
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
+    if (clean(body.website, 200)) return Response.json({ ok: true });
     if (!body.consent) return Response.json({ error: "Contact consent is required." }, { status: 400 });
 
     let messages = sanitizeMessages(body.messages);
     if (body.lead) {
       const lead = body.lead;
       const description = clean(lead.message);
+      if (clean(lead.name, 120).length < 2) return Response.json({ error: "A name is required." }, { status: 400 });
+      if (description.length < 5) return Response.json({ error: "A short message is required." }, { status: 400 });
       messages = [{ role: "user", content: `${clean(lead.need, 120)}. ${description}`.trim() }];
     }
     if (!messages.length) return Response.json({ error: "A lead message is required." }, { status: 400 });
@@ -48,7 +63,7 @@ export async function POST(request) {
       sessionId: clean(body.sessionId, 120) || null,
       qualification,
       messages,
-      attribution: body.attribution || {},
+      attribution: sanitizeAttribution(body.attribution),
       source: body.lead ? "quick-fallback" : "bensimple-ai"
     });
     return Response.json({

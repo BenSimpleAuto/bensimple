@@ -1,4 +1,4 @@
-import { getModelsForMakeYear } from "../../../../lib/nhtsa";
+import { getModelsForMakeYear } from "../../../../lib/nhtsa.js";
 
 export const runtime = "nodejs";
 

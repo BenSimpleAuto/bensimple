@@ -1,0 +1,19 @@
+# BenSimple
+
+BenSimple is Ben LaVelle's personal automotive brand in Butte, Montana. Butte Auto is the dealership affiliation and official inventory source.
+
+Official website: https://www.bensimple.co/
+Contact: ben@bensimple.co or 406-399-5959
+Official inventory: https://www.butteauto.com/all-inventory/index.htm
+
+BenSimple helps customers narrow a vehicle search, prepare a trade or sale, ask automotive questions, decode VINs with official NHTSA vPIC data, review NHTSA model-level recall information, and request an appointment with Ben.
+
+Important limits:
+- BenSimple does not publish or quote dealership prices, MSRP, rebates, incentives, monthly payments, trade values, or financing guarantees.
+- Inventory availability and current details must be verified by Ben.
+- Appointment requests remain pending until Ben confirms them personally.
+- Recall information is attributed to NHTSA and should be confirmed for a specific VIN through NHTSA or an authorized dealer.
+
+Primary pages:
+- Home and assistant: https://www.bensimple.co/
+- Privacy and disclosures: https://www.bensimple.co/legal

@@ -1,6 +1,7 @@
 import BdcAgent from "./components/BdcAgent";
 import BrandWordmark from "./components/BrandWordmark";
 import QuickLeadForm from "./components/QuickLeadForm";
+import ReviewForm from "./components/ReviewForm";
 
 const PHONE = "4063995959";
 const DISPLAY_PHONE = "406-399-5959";
@@ -17,21 +18,66 @@ const capabilityRows = [
   ["05", "Give Ben the useful summary", "Buying timeframe, priorities, deal-breakers, trade, appointment status, and the recommended next action are organized for follow-up."]
 ];
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.bensimple.co/#website",
+      url: "https://www.bensimple.co/",
+      name: "BenSimple",
+      description: "Automotive help from Ben LaVelle in Butte, Montana.",
+      inLanguage: "en-US"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.bensimple.co/#ben-lavelle",
+      name: "Ben LaVelle",
+      alternateName: "BenSimple",
+      url: "https://www.bensimple.co/",
+      image: "https://www.bensimple.co/BEN_MASTER_PROFILE_APPROVED.png",
+      telephone: "+1-406-399-5959",
+      email: "ben@bensimple.co",
+      jobTitle: "Automotive Sales Professional",
+      areaServed: { "@type": "City", name: "Butte, Montana" },
+      worksFor: {
+        "@type": "Organization",
+        name: "Butte Auto",
+        url: "https://www.butteauto.com/"
+      },
+      sameAs: [FACEBOOK, INSTAGRAM]
+    },
+    {
+      "@type": "Service",
+      name: "BenSimple Automotive Help",
+      provider: { "@id": "https://www.bensimple.co/#ben-lavelle" },
+      areaServed: { "@type": "City", name: "Butte, Montana" },
+      serviceType: ["Vehicle shopping help", "Trade and sell guidance", "VIN decoding", "NHTSA recall information", "Appointment requests"]
+    }
+  ]
+};
+
 export default function Home() {
-  return <main>
+  return <main id="top">
+    <a className="skipLink" href="#main-content">Skip to main content</a>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
     <header className="siteHeader shell">
       <a className="wordmarkLink" href="#top" aria-label="BenSimple home"><BrandWordmark priority /></a>
       <div className="headerIdentity"><strong>Ben LaVelle</strong><span>Butte Auto · Butte, Montana</span></div>
       <nav aria-label="Main navigation">
         <a href="#bensimple-ai">BenSimple AI</a>
         <a href="#vehicle-data">VIN + Recalls</a>
+        <a href="#review">Reviews</a>
         <a href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a>
         <a href="#contact">Talk to Ben</a>
       </nav>
-      <a className="mobileCall" href={`tel:${PHONE}`} aria-label={`Call Ben at ${DISPLAY_PHONE}`}>Call Ben</a>
+      <div className="mobileActions">
+        <a className="mobileCall" href={`tel:${PHONE}`} aria-label={`Call Ben at ${DISPLAY_PHONE}`}>Call</a>
+        <details className="mobileMenu"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="#bensimple-ai">BenSimple AI</a><a href="#vehicle-data">VIN + Recalls</a><a href="#review">Reviews</a><a href="#contact">Talk to Ben</a><a href={INVENTORY} target="_blank" rel="noreferrer">Inventory</a></nav></details>
+      </div>
     </header>
 
-    <section className="aiHero shell" id="top" aria-labelledby="heroTitle">
+    <section className="aiHero shell" id="main-content" aria-labelledby="heroTitle">
       <div className="aiHeroCopy">
         <span className="heroKicker">BenSimple Automotive BDC · Butte, Montana</span>
         <h1 id="heroTitle"><span>A smarter first</span><span>conversation.</span></h1>
@@ -79,6 +125,15 @@ export default function Home() {
       </div>
     </section>
 
+    <section className="reviewSection shell" id="review" aria-labelledby="reviewTitle">
+      <div className="reviewIntro">
+        <span className="sectionLabel">Customer reviews</span>
+        <h2 id="reviewTitle">Your words.<br />Your choice.</h2>
+        <p>Share an honest experience with BenSimple. You choose how your name may appear, and nothing goes live until Ben reviews the submission.</p>
+      </div>
+      <ReviewForm />
+    </section>
+
     <section className="contactSection shell" id="contact">
       <div className="contactIntro"><span className="sectionLabel">Talk to Ben</span><h2>When it needs a person, it reaches a person.</h2><p>Ben reviews the conversation summary, verifies the vehicle information, and confirms appointment requests personally.</p><a className="contactPhone" href={`tel:${PHONE}`}>{DISPLAY_PHONE}</a><a href={`mailto:${EMAIL}`}>{EMAIL}</a></div>
       <QuickLeadForm />
@@ -87,7 +142,7 @@ export default function Home() {
     <footer className="siteFooter shell">
       <a className="wordmarkLink footerWordmark" href="#top" aria-label="BenSimple home"><BrandWordmark /></a>
       <p>Ben LaVelle · Butte Auto · Butte, Montana</p>
-      <nav><a href="/legal">Privacy</a><a href={FACEBOOK} target="_blank" rel="noreferrer">Facebook</a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a><a href={INVENTORY} target="_blank" rel="noreferrer">Butte Auto Inventory</a></nav>
+      <nav><a href="#review">Submit a Review</a><a href="/legal">Privacy</a><a href={FACEBOOK} target="_blank" rel="noreferrer">Facebook</a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram</a><a href={INVENTORY} target="_blank" rel="noreferrer">Butte Auto Inventory</a></nav>
       <small>BenSimple is Ben LaVelle’s personal automotive brand. Butte Auto is the dealership affiliation and official inventory source.</small>
     </footer>
   </main>;

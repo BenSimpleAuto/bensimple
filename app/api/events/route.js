@@ -1,4 +1,4 @@
-import { storeEvent } from "../../../lib/bdc/storage";
+import { storeEvent } from "../../../lib/bdc/storage.js";
 
 export const runtime = "nodejs";
 

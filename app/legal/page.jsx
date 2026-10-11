@@ -1,7 +1,7 @@
 import BrandWordmark from "../components/BrandWordmark";
 
 export const metadata = {
-  title: "Disclosures & Privacy | BenSimple",
+  title: "Disclosures & Privacy",
   description: "BenSimple automotive advertising, pricing, privacy, and website disclosures."
 };
 
@@ -62,6 +62,11 @@ export default function LegalPage() {
         </p>
         <p>
           Do not submit Social Security numbers, banking credentials, passwords, full payment-card information, or other highly sensitive financial information through a general website contact form or ordinary text message.
+        </p>
+
+        <h2>Customer review submissions</h2>
+        <p>
+          Review submissions are stored privately for moderation. A review is not published automatically. BenSimple may publish a submitted review only when the customer gives explicit permission, and only using the display-name preference selected on the form. The verification email is kept private and is not shown with a published testimonial. BenSimple may reject, edit for spelling or length with the meaning preserved, or decline to publish a submission.
         </p>
 
         <h2>External links</h2>
