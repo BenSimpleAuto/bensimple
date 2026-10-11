@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { LEAD_STATUSES } from "../../lib/leadStatuses";
 import BrandWordmark from "../components/BrandWordmark";
 
-const ADMIN_EMAIL = "ben@bensimple.co";
+const ADMIN_EMAIL = "benlavelle44@gmail.com";
 
 function Metric({label,value,sub}) {
   return (

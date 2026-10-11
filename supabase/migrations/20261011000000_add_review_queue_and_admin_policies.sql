@@ -79,14 +79,14 @@ create policy auto_leads_admin_select
 on public.auto_leads
 for select
 to authenticated
-using (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co');
+using ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid);
 
 create policy auto_leads_admin_update
 on public.auto_leads
 for update
 to authenticated
-using (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co')
-with check (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co');
+using ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid)
+with check ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid);
 
 create policy auto_events_public_insert
 on public.auto_events
@@ -98,7 +98,7 @@ create policy auto_events_admin_select
 on public.auto_events
 for select
 to authenticated
-using (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co');
+using ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid);
 
 create policy customer_reviews_public_insert
 on public.customer_reviews
@@ -116,11 +116,11 @@ create policy customer_reviews_admin_select
 on public.customer_reviews
 for select
 to authenticated
-using (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co');
+using ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid);
 
 create policy customer_reviews_admin_update
 on public.customer_reviews
 for update
 to authenticated
-using (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co')
-with check (lower(coalesce((select auth.jwt() ->> 'email'), '')) = 'ben@bensimple.co');
+using ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid)
+with check ((select auth.uid()) = '78be7b4e-7106-4b4f-959e-64e59a8bba2b'::uuid);
